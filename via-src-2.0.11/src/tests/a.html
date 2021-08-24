@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title></title>
+  <script src="jszip.js"></script>
+  <script src="jszip-utils.js"></script>
+  <script src="FileSaver.js"></script>
+</head>
+<body>
+<input type="button" value="生成zip" onclick="test()"/>
+<script>
+  function test(){
+
+    var zip = new JSZip();
+    zip.file("1.in", "1 1");
+    zip.file("1.out","2");
+    zip.generateAsync({type:"blob"})
+            .then(function(content) {
+              // see FileSaver.js
+              saveAs(content, "example.zip");
+            });
+
+
+  }
+</script>
+</body>
+</html>
