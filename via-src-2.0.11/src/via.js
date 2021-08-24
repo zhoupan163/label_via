@@ -7362,6 +7362,7 @@ function project_save_with_confirm() {
 }
 
 function project_commit_with_confirm() {
+  window.close();
   var config = {'title':'Save Project' };
   //var input = { 'project_name': { type:'text', name:'Project Name', value:_via_settings.project.name, disabled:false, size:30 },
   //'save_annotations':{ type:'checkbox', name:'Save region and file annotations (i.e. manual annotations)', checked:true, disabled:false},
