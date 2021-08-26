@@ -271,12 +271,13 @@ var _via_attributes_region_list = [];    //region list
 var _url= "http://10.66.66.121:8080";
 var _task_name= "";
 var _token= "";
+var _stream_id= "";
 
 var _qa_type= "";
 
-var _img_qa_comment_list=["",
-                          "第一个框标注错误"
-                          ]
+var _img_qa_comment_list= []
+
+var _img_status_list= []
 
 function file_metadata(filename, size) {
   this.filename = filename;
@@ -355,14 +356,15 @@ function getQueryVariable(variable) {
   return(false);
 }
 
-function loadViaProjectJson(projectId){
+function loadViaProjectJson(){
   _task_name=getQueryVariable("taskName");
   _token=getQueryVariable("token");
   _qa_type=getQueryVariable("qa_type");
+  _stream_id=getQueryVariable("streamId")
   var ajaxObj=new XMLHttpRequest();
 
   //ajaxObj.open("GET","http://www.baidu.com/");
-  ajaxObj.open("GET",_url+ "/business/labelVia/getTaskViaInfo?taskName="+ _task_name.toString() + "&type="+ _qa_type,true);
+  ajaxObj.open("GET",_url+ "/business/labelVia/getTaskViaInfo?taskName="+ _task_name.toString() + "&streamId=" +_stream_id+ "&type="+ _qa_type,true);
   ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());
   ajaxObj.send();
   ajaxObj.onreadystatechange= function () {
@@ -374,8 +376,12 @@ function loadViaProjectJson(projectId){
          "_via_attributes": res["via_attributes"],
          "_via_img_metadata": res["via_img_metadata"],
          "_via_image_id_list": res["via_image_id_list"]
-       }
+       };
+       _img_qa_comment_list= res["qa_comment_list"];
+       _img_status_list= res["img_status_list"];
        project_open_parse_json_file(via_project_info)
+       document.getElementById("qa_comment").value = _img_qa_comment_list[_via_image_index];
+       document.getElementById("img_status").value = _img_status_list[_via_image_index];
     }
   };
   //alert("load finish");
@@ -402,29 +408,35 @@ function _via_init_mouse_handlers() {
   _via_reg_canvas.addEventListener('mouseup', _via_reg_canvas_mouseup_handler, false);
 }
 
-function qa(operation){
+function qa(value){
   var qa_comment="";
-  qa_comment=document.getElementById("qa_comment").value.toString();
-  if(operation=="reject" && qa_comment==""){
-    alert("请输入驳回备注");
+  var image_status = document.getElementById("img_status").value;
+  var qa_comment = document.getElementById("qa_comment").value;
+  if(value == 0 && image_status== 0){
+    alert("该图片已处于驳回状态，请勿重复操作");
     return ;
-  }
-  var image_url= _via_image_id_list[_via_image_index]
-  var ajaxObj=new XMLHttpRequest();
-  ajaxObj.open("GET",_url+ "/business/labelCheck/qa?taskName="+ _task_name.toString() + "&imgUrl="+
-      image_url.toString() + "&qaType=" +_qa_type.toString()+ "&qaComment=" + qa_comment + "&operation="+ operation,true);
-  ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());
-  ajaxObj.send();
-  ajaxObj.onreadystatechange= function () {
-    if (ajaxObj.readyState === 4 && ajaxObj.status) {
-      alert("操作成功");
-      move_to_next_image();
-      document.getElementById("qa_comment").value = _img_qa_comment_list[_via_image_index];
-      return ;
-    }
   };
+  if(value == 1 && image_status== 1){
+    alert("该图片已处于通过状态，请勿重复操作");
+    return ;
+  };
+  if(value == 0 && qa_comment== undefined){
+    alert("驳回操作需要输入qa备注");
+    return ;
+  };
+
+  _img_status_list[_via_image_index]= value;
+  if(qa_comment!= undefined){
+    _img_qa_comment_list[_via_image_index] = qa_comment;
+  }
+  move_to_next_image();
 }
 
+function qa_commit(){
+  //只需要修改 comment 和 image_status
+
+
+}
 
 
 
@@ -4573,6 +4585,9 @@ function move_to_next_image() {
   }
 
   if (_via_img_count > 0) {
+    document.getElementById("qa_comment").value = _img_qa_comment_list[_via_image_index];
+    document.getElementById("img_status").value = _img_status_list[_via_image_index];
+
     var current_img_index = _via_image_index;
     if ( _via_img_fn_list_img_index_list.includes( current_img_index ) ) {
       var list_index = _via_img_fn_list_img_index_list.indexOf( current_img_index );

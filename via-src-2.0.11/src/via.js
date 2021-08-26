@@ -322,6 +322,7 @@ var _via_attributes_region_list = [];    //region list
 var _url= "http://10.66.66.121:8080";
 var _task_name= "";
 var _token= "";
+var _stream_id= "";
 
 function file_metadata(filename, size) {
   this.filename = filename;
@@ -406,13 +407,14 @@ function getQueryVariable(variable) {
   return(false);
 }
 
-function loadViaProjectJson(projectId){
+function loadViaProjectJson(){
   _task_name=getQueryVariable("taskName");
   _token=getQueryVariable("token");
+  _stream_id=getQueryVariable("streamId")
   var ajaxObj=new XMLHttpRequest();
 
   //ajaxObj.open("GET","http://www.baidu.com/");
-  ajaxObj.open("GET",_url+ "/business/labelVia/getTaskViaInfo?taskName="+ _task_name.toString() +"&type=label",true);
+  ajaxObj.open("GET",_url+ "/business/labelVia/getTaskViaInfo?taskName="+ _task_name.toString() + "&streamId=" +_stream_id.toString() +"&type=label",true);
   ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());
   ajaxObj.send();
   ajaxObj.onreadystatechange= function () {
@@ -7361,7 +7363,7 @@ function project_save_with_confirm() {
 }
 
 function project_commit_with_confirm() {
-  window.close();
+  //window.close();
   var config = {'title':'Save Project' };
   //var input = { 'project_name': { type:'text', name:'Project Name', value:_via_settings.project.name, disabled:false, size:30 },
   //'save_annotations':{ type:'checkbox', name:'Save region and file annotations (i.e. manual annotations)', checked:true, disabled:false},
@@ -7402,7 +7404,6 @@ function project_save_confirmed(input, router) {
       alert("保存成功");
     }
   };
-
 
 
   /*
