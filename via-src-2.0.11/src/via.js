@@ -320,7 +320,7 @@ var _via_attributes_region_list = [];    //region list
 //
 //var _url= "http://localhost:8080";
 var _url= "http://10.66.66.121:8080";
-var _streamId= "";
+var _task_name= "";
 var _token= "";
 
 function file_metadata(filename, size) {
@@ -407,12 +407,12 @@ function getQueryVariable(variable) {
 }
 
 function loadViaProjectJson(projectId){
-  _streamId=getQueryVariable("streamId");
+  _task_name=getQueryVariable("taskName");
   _token=getQueryVariable("token");
   var ajaxObj=new XMLHttpRequest();
 
   //ajaxObj.open("GET","http://www.baidu.com/");
-  ajaxObj.open("GET",_url+ "/business/labelVia/getStreamViaInfo?streamId="+ _streamId.toString(),true);
+  ajaxObj.open("GET",_url+ "/business/labelVia/getTaskViaInfo?taskName="+ _task_name.toString() +"&type=label",true);
   ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());
   ajaxObj.send();
   ajaxObj.onreadystatechange= function () {
@@ -7292,12 +7292,10 @@ function project_save_confirmed(input) {
     'via_attributes': _via_attributes,
     'via_data_format_version': '2.0.10',
     'via_image_id_list': _via_image_id_list,
-    'stream_id': getQueryVariable("streamId")
+    'taskName': getQueryVariable("taskName")
   };
-  // var task_viaInfo ={"streamId": _streamId,
-  //                    "via_project_info": _via_project};
   var ajaxObj = new XMLHttpRequest();
-  ajaxObj.open("POST", _url + "/business/labelVia/updateStreamViaInfo", true);
+  ajaxObj.open("POST", _url + "/business/labelVia/updateViaInfo", true);
   ajaxObj.setRequestHeader("Authorization", "Bearer " + _token.toString());
   ajaxObj.setRequestHeader('content-type', 'application/json');
   ajaxObj.send(JSON.stringify(via_project));
@@ -7320,12 +7318,10 @@ function project_commit_confirmed(input) {
     'via_attributes': _via_attributes,
     'via_data_format_version': '2.0.10',
     'via_image_id_list': _via_image_id_list,
-    'stream_id': getQueryVariable("streamId")
+    'task_name': getQueryVariable("taskName")
   };
-  // var task_viaInfo ={"streamId": _streamId,
-  //                    "via_project_info": _via_project};
   var ajaxObj = new XMLHttpRequest();
-  ajaxObj.open("POST", _url + "/business/labelVia/commitStreamViaInfo", true);
+  ajaxObj.open("POST", _url + "/business/labelVia/commitViaInfo", true);
   ajaxObj.setRequestHeader("Authorization", "Bearer " + _token.toString());
   ajaxObj.setRequestHeader('content-type', 'application/json');
   ajaxObj.send(JSON.stringify(via_project));
@@ -7361,7 +7357,7 @@ function project_save_with_confirm() {
                  'save_attributes':true,
                  'save_via_settings':true};
   //invoke_with_user_inputs(project_save_confirmed, input, config);
-  project_save_confirmed(input, "/business/labelVia/updateStreamViaInfo")
+  project_save_confirmed(input, "/business/labelVia/updateViaInfo")
 }
 
 function project_commit_with_confirm() {
@@ -7379,7 +7375,7 @@ function project_commit_with_confirm() {
     'save_attributes':true,
     'save_via_settings':true};
   //invoke_with_user_inputs(project_save_confirmed, input, config);
-  project_save_confirmed(input, "/business/labelVia/commitStreamViaInfo" )
+  project_save_confirmed(input, "/business/labelVia/commitViaInfo" )
 }
 
 function project_save_confirmed(input, router) {
@@ -7393,10 +7389,8 @@ function project_save_confirmed(input, router) {
                        'via_attributes': _via_attributes,
                        'via_data_format_version': '2.0.10',
                        'via_image_id_list': _via_image_id_list,
-                       'stream_id': getQueryVariable("streamId")
+                       'taskName': getQueryVariable("taskName")
                      };
- // var task_viaInfo ={"streamId": _streamId,
-  //                    "via_project_info": _via_project};
   var ajaxObj=new XMLHttpRequest();
   ajaxObj.open("POST",_url+ router,true);
   ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());

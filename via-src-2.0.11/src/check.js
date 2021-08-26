@@ -269,7 +269,7 @@ var _via_attributes_region_list = [];    //region list
 //
 //var _url= "http://localhost:8080";
 var _url= "http://10.66.66.121:8080";
-var _streamId= "";
+var _task_name= "";
 var _token= "";
 
 var _qa_type= "";
@@ -356,12 +356,13 @@ function getQueryVariable(variable) {
 }
 
 function loadViaProjectJson(projectId){
-  _streamId=getQueryVariable("streamId");
+  _task_name=getQueryVariable("taskName");
   _token=getQueryVariable("token");
+  _qa_type=getQueryVariable("qa_type");
   var ajaxObj=new XMLHttpRequest();
 
   //ajaxObj.open("GET","http://www.baidu.com/");
-  ajaxObj.open("GET",_url+ "/business/labelVia/getStreamViaInfo?streamId="+ _streamId.toString(),true);
+  ajaxObj.open("GET",_url+ "/business/labelVia/getTaskViaInfo?taskName="+ _task_name.toString() + "&type="+ _qa_type,true);
   ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());
   ajaxObj.send();
   ajaxObj.onreadystatechange= function () {
@@ -408,12 +409,9 @@ function qa(operation){
     alert("请输入驳回备注");
     return ;
   }
-  _streamId=getQueryVariable("streamId");
-  _token=getQueryVariable("token");
-  _qa_type=getQueryVariable("qa_type");
   var image_url= _via_image_id_list[_via_image_index]
   var ajaxObj=new XMLHttpRequest();
-  ajaxObj.open("GET",_url+ "/business/labelCheck/qa?streamId="+ _streamId.toString() + "&imgUrl="+
+  ajaxObj.open("GET",_url+ "/business/labelCheck/qa?taskName="+ _task_name.toString() + "&imgUrl="+
       image_url.toString() + "&qaType=" +_qa_type.toString()+ "&qaComment=" + qa_comment + "&operation="+ operation,true);
   ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());
   ajaxObj.send();
@@ -7200,61 +7198,9 @@ function project_init_default_project() {
 function project_on_name_update(p) {
   project_set_name(p.value);
 }
-function project_save_confirmed(input) {
-  if (input.project_name.value !== _via_settings.project.name) {
-    project_set_name(input.project_name.value);
-  }
-  // via project
-  var via_project = {
-    'via_settings': _via_settings,
-    'via_img_metadata': _via_img_metadata,
-    'via_attributes': _via_attributes,
-    'via_data_format_version': '2.0.10',
-    'via_image_id_list': _via_image_id_list,
-    'stream_id': getQueryVariable("streamId")
-  };
-  // var task_viaInfo ={"streamId": _streamId,
-  //                    "via_project_info": _via_project};
-  var ajaxObj = new XMLHttpRequest();
-  ajaxObj.open("POST", _url + "/business/labelVia/updateStreamViaInfo", true);
-  ajaxObj.setRequestHeader("Authorization", "Bearer " + _token.toString());
-  ajaxObj.setRequestHeader('content-type', 'application/json');
-  ajaxObj.send(JSON.stringify(via_project));
 
-  ajaxObj.onreadystatechange = function () {
-    if (ajaxObj.readyState === 4 && ajaxObj.status) {
-      alert("提交成功");
-    }
-  };
-}
 
-function project_commit_confirmed(input) {
-  if (input.project_name.value !== _via_settings.project.name) {
-    project_set_name(input.project_name.value);
-  }
-  // via project
-  var via_project = {
-    'via_settings': _via_settings,
-    'via_img_metadata': _via_img_metadata,
-    'via_attributes': _via_attributes,
-    'via_data_format_version': '2.0.10',
-    'via_image_id_list': _via_image_id_list,
-    'stream_id': getQueryVariable("streamId")
-  };
-  // var task_viaInfo ={"streamId": _streamId,
-  //                    "via_project_info": _via_project};
-  var ajaxObj = new XMLHttpRequest();
-  ajaxObj.open("POST", _url + "/business/labelVia/commitStreamViaInfo", true);
-  ajaxObj.setRequestHeader("Authorization", "Bearer " + _token.toString());
-  ajaxObj.setRequestHeader('content-type', 'application/json');
-  ajaxObj.send(JSON.stringify(via_project));
 
-  ajaxObj.onreadystatechange = function () {
-    if (ajaxObj.readyState === 4 && ajaxObj.status) {
-      alert("提交成功");
-    }
-  };
-}
 
 function project_get_default_project_name() {
   const now = new Date();
@@ -7266,140 +7212,6 @@ function project_get_default_project_name() {
   return project_name;
 }
 
-function project_save_with_confirm() {
-  var config = {'title':'Save Project' };
-  //var input = { 'project_name': { type:'text', name:'Project Name', value:_via_settings.project.name, disabled:false, size:30 },
-                //'save_annotations':{ type:'checkbox', name:'Save region and file annotations (i.e. manual annotations)', checked:true, disabled:false},
-                //'save_attributes':{ type:'checkbox', name:'Save region and file attributes.', checked:true},
-               // 'save_via_settings':{ type:'checkbox', name:'Save VIA application settings', checked:true},
-                //'save_mot_style':{ type:'checkbox', name:'Save MOTChallenge data format', checked:true},
-                //                'save_base64_data':{ type:'checkbox', name:'Save base64 data of images (if present)', checked:false},
-                //                'save_images':{type:'checkbox', 'name':'Save images <span class="warning">(WARNING: only recommended for projects containing small number of images)</span>', value:false},
-             // };
-  var input = { 'project_name': 'test0817', 'save_annotations':true,
-                 'save_attributes':true,
-                 'save_via_settings':true};
-  //invoke_with_user_inputs(project_save_confirmed, input, config);
-  project_save_confirmed(input, "/business/labelVia/updateStreamViaInfo")
-}
-
-function project_commit_with_confirm() {
-  var config = {'title':'Save Project' };
-  //var input = { 'project_name': { type:'text', name:'Project Name', value:_via_settings.project.name, disabled:false, size:30 },
-  //'save_annotations':{ type:'checkbox', name:'Save region and file annotations (i.e. manual annotations)', checked:true, disabled:false},
-  //'save_attributes':{ type:'checkbox', name:'Save region and file attributes.', checked:true},
-  // 'save_via_settings':{ type:'checkbox', name:'Save VIA application settings', checked:true},
-  //'save_mot_style':{ type:'checkbox', name:'Save MOTChallenge data format', checked:true},
-  //                'save_base64_data':{ type:'checkbox', name:'Save base64 data of images (if present)', checked:false},
-  //                'save_images':{type:'checkbox', 'name':'Save images <span class="warning">(WARNING: only recommended for projects containing small number of images)</span>', value:false},
-  // };
-  var input = { 'project_name': 'test0817', 'save_annotations':true,
-    'save_attributes':true,
-    'save_via_settings':true};
-  //invoke_with_user_inputs(project_save_confirmed, input, config);
-  project_save_confirmed(input, "/business/labelVia/commitStreamViaInfo" )
-}
-
-function project_save_confirmed(input, router) {
-  if ( input.project_name.value !== _via_settings.project.name ) {
-    project_set_name(input.project_name.value);
-  };
-
-  // via project
-  var via_project = { 'via_settings': _via_settings,
-                       'via_img_metadata': _via_img_metadata,
-                       'via_attributes': _via_attributes,
-                       'via_data_format_version': '2.0.10',
-                       'via_image_id_list': _via_image_id_list,
-                       'stream_id': getQueryVariable("streamId")
-                     };
- // var task_viaInfo ={"streamId": _streamId,
-  //                    "via_project_info": _via_project};
-  var ajaxObj=new XMLHttpRequest();
-  ajaxObj.open("POST",_url+ router,true);
-  ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());
-  ajaxObj.setRequestHeader('content-type', 'application/json');
-  ajaxObj.send(JSON.stringify(via_project));
-
-  ajaxObj.onreadystatechange= function () {
-    if (ajaxObj.readyState === 4 && ajaxObj.status) {
-      alert("保存成功");
-    }
-  };
-
-
-
-  /*
- var filename = input.project_name.value + '.json';
- var data_blob = new Blob( [JSON.stringify(_via_project)],
-                           {type: 'text/json;charset=utf-8'});
-
- save_data_to_local_file(data_blob, filename);
- //有bug每次只能保存十个文件 此功能取消
- //input.save_mot_style=undefined;
- if(input.save_mot_style){
-   var zip = new JSZip();
-   if(input.save_mot_style['value'] ==true){
-     //var data='1,2,3,4,5,6,7,8'
-     for (var metadata in _via_project._via_img_metadata) {
-       //解析成mot数据并保存 一张图片一个txt文件 demo.jpg对应demo.txt
-       var fname = _via_project._via_img_metadata[metadata].filename.toString()
-       if (fname == 'demo.jpg') {
-         continue
-       }
-       var imageName;
-       if (fname.includes("/")) {
-         imageName = fname.split('/').pop()
-       } else {
-         imageName = fname
-       }
-       var data = {};
-       var txtFileName = imageName.replace('jpg', 'txt').replace('img', 'txt').replace('jpeg', 'txt')
-
-       var img_id=imageName.split('.')[0].toString()
-       var data='';
-
-
-       var regions=_via_project._via_img_metadata[metadata].regions
-       for (var region in regions) {
-         var region_attributes = regions[region].region_attributes
-         var region_id = region_attributes.id
-
-         var shape_attributes = regions[region].shape_attributes
-         var x = shape_attributes.x
-         var y = shape_attributes.y
-         var w = shape_attributes.width
-         var h = shape_attributes.height
-
-         var block = region_attributes.block
-         var fuzzy = region_attributes.fuzzy
-         var side = region_attributes.side
-         var crop = region_attributes.crop
-
-         var sep = ' '
-         //data+=img_id+ sep+ region_id.toString()+ sep+ x.toString()+ sep+ y.toString()+ sep + w.toString()+sep+ h.toString() +
-         //  sep +block.toString() + sep + fuzzy.toString()+ sep +side.toString() + sep + crop.toString() +'\r\n'
-       }
-       data="1 2 0 3 4 5 6 7 8 9"
-       zip.file(txtFileName, data);
-       //alert(data)
-       //var export_blob = new Blob([data]);
-       //console.log('save mot')
-       //save_data_to_local_file(export_blob, txtFileName);
-       //alert('save motdata success!
-     }
-     zip.file("total.txt","3");
-     zip.generateAsync({type:"blob"})
-         .then(function(content) {
-           // see FileSaver.js
-           saveAs(content, "example.zip");
-         });
-
-   }
- }
- */
-  user_input_default_cancel_handler();
-}
 
 function project_open_select_project_file() {
   if (invisible_file_input) {
