@@ -1,54 +1,3 @@
-/*
-  VGG Image Annotator (via)
-  www.robots.ox.ac.uk/~vgg/software/via/
-
-  Copyright (c) 2016-2019, Abhishek Dutta, Visual Geometry Group, Oxford University and VIA Contributors.
-  All rights reserved.
-
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
-
-  Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-  Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
-  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-  POSSIBILITY OF SUCH DAMAGE.
-*/
-
-/*
-  Links:
-  - https://gitlab.com/vgg/via/blob/master/Contributors.md : list of developers who have contributed code to the VIA project.
-  - https://gitlab.com/vgg/via/blob/master/CodeDoc.md : source code documentation
-  - https://gitlab.com/vgg/via/blob/master/CONTRIBUTING.md : guide for contributors
-
-  This source code can be grouped into the following categories:
-  - Data structure for annotations
-  - Initialization routine
-  - Handlers for top navigation bar
-  - Local file uploaders
-  - Data Importer
-  - Data Exporter
-  - Maintainers of user interface
-  - Image click handlers
-  - Canvas update routines
-  - Region collision routines
-  - Shortcut key handlers
-  - Persistence of annotation data in browser cache (i.e. localStorage)
-  - Handlers for attributes input panel (spreadsheet like user input panel)
-*/
-
-"use strict";
 
 var VIA_VERSION      = '2.0.11';
 var VIA_NAME         = 'VGG Image Annotator';
@@ -323,6 +272,12 @@ var _url= "http://10.66.66.121:8080";
 var _streamId= "";
 var _token= "";
 
+var _qa_type= "";
+
+var _img_qa_comment_list=["",
+                          "第一个框标注错误"
+                          ]
+
 function file_metadata(filename, size) {
   this.filename = filename;
   this.size     = size;         // file size in bytes
@@ -368,12 +323,9 @@ function _via_init() {
 
   show_single_image_view();
   init_leftsidebar_accordion();
-  attribute_update_panel_set_active_button();
-  annotation_editor_set_active_button();
+  //attribute_update_panel_set_active_button();
+  //annotation_editor_set_active_button();
   init_message_panel();
-  //loadProject()
-  // run attached sub-modules (if any)
-  // e.g. demo modules
   if (typeof _via_load_submodules === 'function') {
     console.log('Loading VIA submodule');
     setTimeout( async function() {
@@ -388,7 +340,7 @@ function loadProject(){
   loadViaProjectJson();
    _via_redraw_reg_canvas();
   draw_all_regions();
-  draw_all_region_id();
+  //draw_all_region_id();
 
    //alert("加载完毕");
 }
@@ -447,66 +399,36 @@ function _via_init_mouse_handlers() {
 
   _via_reg_canvas.addEventListener('mousedown', _via_reg_canvas_mousedown_handler, false);
   _via_reg_canvas.addEventListener('mouseup', _via_reg_canvas_mouseup_handler, false);
-  //_via_reg_canvas.addEventListener('mouseover', _via_reg_canvas_mouseover_handler, false);
-  //_via_reg_canvas.addEventListener('mousemove', _via_reg_canvas_mousemove_handler, false);
-  //_via_reg_canvas.addEventListener('wheel', _via_reg_canvas_mouse_wheel_listener, false);
-  // touch screen event handlers
-  // @todo: adapt for mobile users
-  /*
-  _via_reg_canvas.addEventListener('touchstart', _via_reg_canvas_mousedown_handler, false);
-  _via_reg_canvas.addEventListener('touchend', _via_reg_canvas_mouseup_handler, false);
-  _via_reg_canvas.addEventListener('touchmove', _via_reg_canvas_mousemove_handler, false);
-  */
 }
 
-//
-// Download image with annotations
-//
-
-function download_as_image() {
-  if ( _via_display_area_content_name !== VIA_DISPLAY_AREA_CONTENT_NAME['IMAGE'] ) {
-    show_message('This functionality is only available in single image view mode');
-    return;
-  } else {
-    var c = document.createElement('canvas');
-
-    // ensures that downloaded image is scaled at current zoom level
-    c.width  = _via_reg_canvas.width;
-    c.height = _via_reg_canvas.height;
-
-    var ct = c.getContext('2d');
-    // draw current image
-    ct.drawImage(_via_current_image, 0, 0, _via_reg_canvas.width, _via_reg_canvas.height);
-    // draw current regions
-    ct.drawImage(_via_reg_canvas, 0, 0);
-
-    var cur_img_mime = 'image/jpeg';
-    if ( _via_current_image.src.startsWith('data:') )  {
-      var c1 = _via_current_image.src.indexOf(':', 0);
-      var c2 = _via_current_image.src.indexOf(';', c1);
-      cur_img_mime = _via_current_image.src.substring(c1 + 1, c2);
-    }
-
-    // extract image data from canvas
-    var saved_img = c.toDataURL(cur_img_mime);
-    saved_img.replace(cur_img_mime, "image/octet-stream");
-
-    // simulate user click to trigger download of image
-    var a      = document.createElement('a');
-    a.href     = saved_img;
-    a.target   = '_blank';
-    a.download = _via_current_image_filename;
-
-    // simulate a mouse click event
-    var event = new MouseEvent('click', {
-      view: window,
-      bubbles: true,
-      cancelable: true
-    });
-
-    a.dispatchEvent(event);
+function qa(operation){
+  var qa_comment="";
+  qa_comment=document.getElementById("qa_comment").value.toString();
+  if(operation=="reject" && qa_comment==""){
+    alert("请输入驳回备注");
+    return ;
   }
+  _streamId=getQueryVariable("streamId");
+  _token=getQueryVariable("token");
+  _qa_type=getQueryVariable("qa_type");
+  var image_url= _via_image_id_list[_via_image_index]
+  var ajaxObj=new XMLHttpRequest();
+  ajaxObj.open("GET",_url+ "/business/labelCheck/qa?streamId="+ _streamId.toString() + "&imgUrl="+
+      image_url.toString() + "&qaType=" +_qa_type.toString()+ "&qaComment=" + qa_comment + "&operation="+ operation,true);
+  ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());
+  ajaxObj.send();
+  ajaxObj.onreadystatechange= function () {
+    if (ajaxObj.readyState === 4 && ajaxObj.status) {
+      alert("操作成功");
+      move_to_next_image();
+      document.getElementById("qa_comment").value = _img_qa_comment_list[_via_image_index];
+      return ;
+    }
+  };
 }
+
+
+
 
 //
 // Display area content
@@ -9020,64 +8942,10 @@ function image_zoom_init() {
 
 }
 
-//
-// hooks for sub-modules
-// implemented by sub-modules
-//
-//function _via_hook_next_image() {}
-//function _via_hook_prev_image() {}
 
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// Code borrowed from via2 branch
-// - in future, the <canvas> based reigon shape drawing will be replaced by <svg>
-//   because svg allows independent manipulation of individual regions without
-//   requiring to clear the canvas every time some region is updated.
-//
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-//
-// @file        _via_region.js
-// @description Implementation of region shapes like rectangle, circle, etc.
-// @author      Abhishek Dutta <adutta@robots.ox.ac.uk>
-// @date        17 June 2017
-//
-////////////////////////////////////////////////////////////////////////////////
 
 function _via_region( shape, id, data_img_space, view_scale_factor, view_offset_x, view_offset_y) {
-  // Note the following terminology:
-  //   view space  :
-  //     - corresponds to the x-y plane on which the scaled version of original image is shown to the user
-  //     - all the region query operations like is_inside(), is_on_edge(), etc are performed in view space
-  //     - all svg draw operations like get_svg() are also in view space
-  //
-  //   image space :
-  //     - corresponds to the x-y plane which corresponds to the spatial space of the original image
-  //     - region save, export, git push operations are performed in image space
-  //     - to avoid any rounding issues (caused by floating scale factor),
-  //        * user drawn regions in view space is first converted to image space
-  //        * this region in image space is now used to initialize region in view space
-  //
-  //   The two spaces are related by _via_model.now.tform.scale which is computed by the method
-  //     _via_ctrl.compute_view_panel_to_nowfile_tform()
-  //   and applied as follows:
-  //     x coordinate in image space = scale_factor * x coordinate in view space
-  //
-  // shape : {rect, circle, ellipse, line, polyline, polygon, point}
-  // id    : unique region-id
-  // d[]   : (in view space) data whose meaning depend on region shape as follows:
-  //        rect     : d[x1,y1,x2,y2] or d[corner1_x, corner1_y, corner2_x, corner2_y]
-  //        circle   : d[x1,y1,x2,y2] or d[center_x, center_y, circumference_x, circumference_y]
-  //        ellipse  : d[x1,y1,x2,y2,transform]
-  //        line     : d[x1,y1,x2,y2]
-  //        polyline : d[x1,y1,...,xn,yn]
-  //        polygon  : d[x1,y1,...,xn,yn]
-  //        point    : d[cx,cy]
-  // scale_factor : for conversion from view space to image space
-  //
-  // Note: no svg data are stored with prefix "_". For example: _scale_factor, _x2
+
   this.shape  = shape;
   this.id     = id;
   this.scale_factor     = view_scale_factor;

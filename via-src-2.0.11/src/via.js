@@ -368,8 +368,8 @@ function _via_init() {
 
   show_single_image_view();
   init_leftsidebar_accordion();
-  attribute_update_panel_set_active_button();
-  annotation_editor_set_active_button();
+  // attribute_update_panel_set_active_button();
+  //annotation_editor_set_active_button();
   init_message_panel();
   //loadProject()
   // run attached sub-modules (if any)
@@ -380,7 +380,10 @@ function _via_init() {
       await _via_load_submodules();
     }, 100);
   }
+  document.getElementById('img_status').value='labeling';
+  document.getElementById('img_comment').value='第一个框标注错误了';
   loadProject();
+
 
 }
 
@@ -8847,7 +8850,8 @@ function image_grid_split_array_to_group(img_index_array, attr_type, attr_name) 
   return grp;
 }
 
-function image_grid_group_next(p) {
+function
+image_grid_group_next(p) {
   var group_index = parseInt( p.value );
   var group_value_list = _via_image_grid_group_var[group_index].values;
   var n = group_value_list.length;

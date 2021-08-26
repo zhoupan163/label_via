@@ -214,7 +214,6 @@
               <li onclick="project_file_add_url_with_input()" title="Add images from a web URL (e.g. http://www.robots.ox.ac.uk/~vgg/software/via/images/swan.jpg)">Add files from URL</li>
               <li onclick="project_file_add_abs_path_with_input()" title="Add images using absolute path of file (e.g. /home/abhishek/image1.jpg)">Add file using absolute path</li>
               <li onclick="sel_local_data_file('files_url')" title="Add images from a list of web url or absolute path stored in a text file (one url or path per line)">Add url or path from text file</li>
-              <li onclick="project_file_remove_with_confirm()" title="Remove selected file (i.e. file currently being shown)">Remove file</li>
               <li class="submenu_divider"></li>
               <li onclick="sel_local_data_file('attributes')" title="Import region and file attributes from a JSON file">Import region/file attributes</li>
               <li onclick="project_save_attributes()" title="Export region and file attributes to a JSON file">Export region/file attributes</li>
@@ -358,38 +357,18 @@
             </div>
           </div>
           <div id="img_fn_list"></div>
-          <p>
-            <div class="button_panel">
-              <span class="button" onclick="sel_local_images()" title="Add new file from local disk">Add Files</span>
-              <span class="button" onclick="project_file_add_url_with_input()" title="Add new file using URL">Add URL</span>
-              <span class="button" onclick="project_file_remove_with_confirm()" title="Remove selected file (i.e. file currently being shown) from project">Remove</span>
-            </div>
-          </p>
+
+          <div class="image_status">
+            <span class="col">image_status: </span>
+            <span class="col"><input type="text"   placeholder="image_status"  value="" oninput="img_status()" id="img_status" title="image_status" disabled="true"></span>
+          </div>
+          <div class="image_comment">
+            <span class="col">image_comment: </span>
+            <span class="col"><input type="text"   placeholder="image_comment"  value="" oninput="img_comment()" id="img_comment" title="image_comment" disabled="true"></span>
+          </div>
         </div>
 
-        <!-- Attributes -->
-        <button class="leftsidebar_accordion" id="attributes_editor_panel_title">Attributes</button>
-        <div class="leftsidebar_accordion_panel" id="attributes_editor_panel">
-          <div class="button_panel" style="padding:1rem 0;">
-            <span class="text_button" onclick="show_region_attributes_update_panel()" id="button_show_region_attributes" title="Show region attributes">Region Attributes</span>
-            <span class="text_button" onclick="show_file_attributes_update_panel()" id="button_show_file_attributes" title="Show file attributes">File Attributes</span>
-          </div>
-          <div id="attributes_update_panel">
-            <div class="button_panel">
-              <input style="width:70%" type="text" placeholder="attribute name" id="user_input_attribute_id" value="">
-              <span id="button_add_new_attribute" class="button" onclick="add_new_attribute_from_user_input()" title="Add new attribute">&plus;</span>
-              <span id="button_del_attribute" class="button" onclick="delete_existing_attribute_with_confirm()" title="Delete existing attribute">&minus;</span>
-            </div>
-            <div class="button_panel" style="margin:0.1rem 0;" >
-              <select style="width:100%" id="attributes_name_list" onchange="update_current_attribute_id(this)" title="List of existing attributes"></select>
-            </div>
-            <div id="attribute_properties"></div>
-            <div id="attribute_options"></div>
-            <p style="text-align:center">
-              <span class="text_button" title="Show a spreadsheet like editor for all manual annotations" onclick="annotation_editor_toggle_all_regions_editor()">Toggle Annotation Editor</span>
-            </p>
-          </div>
-        </div>
+
 
         <button class="leftsidebar_accordion">Keyboard Shortcuts</button>
         <div class="leftsidebar_accordion_panel">
@@ -543,27 +522,6 @@
               <input type="text" id="_via_settings.project.name"/>
             </div>
           </div>
-
-          <!--
-      <div class="row">
-        <div class="variable">
-          <div class="name">Project Path</div>
-        </div>
-
-        <div class="value">
-          <input type="text" id="_via_settings.project.path"/>
-        </div>
-      </div>
-      <div class="row">
-        <div class="variable">
-          <div class="name">Project Path</div>
-        </div>
-
-        <div class="value">
-          <input type="text" id="_via_settings.core.filepath"/>
-        </div>
-      </div>
-       -->
 
       <div class="row">
         <div class="variable">
