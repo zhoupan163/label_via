@@ -279,6 +279,8 @@ var _img_qa_comment_list= []
 
 var _img_status_list= []
 
+var _image_status_c2n_dict= {"驳回": 4, "通过": 1, "未审核": 0};
+var _image_status_n2c_dict= { 4: "驳回", 1: "通过", 0: "未审核"};
 function file_metadata(filename, size) {
   this.filename = filename;
   this.size     = size;         // file size in bytes
@@ -378,10 +380,8 @@ function loadViaProjectJson(){
          "_via_image_id_list": res["via_image_id_list"]
        };
        _img_qa_comment_list= res["qa_comment_list"];
-       _img_status_list= res["img_status_list"];
+       _img_status_list=  res["img_status_list"];
        project_open_parse_json_file(via_project_info)
-       document.getElementById("qa_comment").value = _img_qa_comment_list[_via_image_index];
-       document.getElementById("img_status").value = _img_status_list[_via_image_index];
     }
   };
   //alert("load finish");
@@ -401,30 +401,27 @@ function _via_init_keyboard_handlers() {
 // handles drawing of regions over image by the user
 
 function _via_init_mouse_handlers() {
-
   _via_reg_canvas.addEventListener('dblclick', _via_reg_canvas_dblclick_handler, false);
-
   _via_reg_canvas.addEventListener('mousedown', _via_reg_canvas_mousedown_handler, false);
   _via_reg_canvas.addEventListener('mouseup', _via_reg_canvas_mouseup_handler, false);
 }
 
 function qa(value){
   var qa_comment="";
-  var image_status = document.getElementById("img_status").value;
+  var image_status_chinese= document.getElementById("img_status").value;
   var qa_comment = document.getElementById("qa_comment").value;
-  if(value == 0 && image_status== 0){
-    alert("该图片已处于驳回状态，请勿重复操作");
-    return ;
-  };
-  if(value == 1 && image_status== 1){
-    alert("该图片已处于通过状态，请勿重复操作");
-    return ;
-  };
-  if(value == 0 && qa_comment== undefined){
+  if(value == 4 && qa_comment== ""){
     alert("驳回操作需要输入qa备注");
     return ;
   };
-
+  if(value == 4 &&  _image_status_c2n_dict[image_status_chinese] == 4){
+    alert("该图片已处于驳回状态，请勿重复操作");
+    return ;
+  };
+  if(value == 1 && _image_status_c2n_dict[image_status_chinese] == 1){
+    alert("该图片已处于通过状态，请勿重复操作");
+    return ;
+  };
   _img_status_list[_via_image_index]= value;
   if(qa_comment!= undefined){
     _img_qa_comment_list[_via_image_index] = qa_comment;
@@ -433,9 +430,30 @@ function qa(value){
 }
 
 function qa_commit(){
+  if(_img_status_list.indexOf(0)!= -1){
+    alert("存在未审批的图片，不允许提交");
+    return;
+  }
   //只需要修改 comment 和 image_status
-
-
+  var ajaxObj = new XMLHttpRequest();
+  ajaxObj.open("POST",_url+ "/business/labelCheck/qa",true);
+  ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());
+  ajaxObj.setRequestHeader('content-type', 'application/json');
+  var qa_info ={
+      "imgList": _via_image_id_list,
+      "imgStatusList": _img_status_list,
+      "imgQaCommentList": _img_qa_comment_list,
+      "taskName": _task_name,
+      "qaType": _qa_type,
+      "streamId": _stream_id
+  };
+  ajaxObj.send(JSON.stringify(qa_info));
+  ajaxObj.onreadystatechange = function () {
+    if (ajaxObj.readyState === 4 && ajaxObj.status) {
+      alert("提交成功");
+      window.close();
+    }
+  };
 }
 
 
@@ -4585,8 +4603,7 @@ function move_to_next_image() {
   }
 
   if (_via_img_count > 0) {
-    document.getElementById("qa_comment").value = _img_qa_comment_list[_via_image_index];
-    document.getElementById("img_status").value = _img_status_list[_via_image_index];
+
 
     var current_img_index = _via_image_index;
     if ( _via_img_fn_list_img_index_list.includes( current_img_index ) ) {
@@ -9067,6 +9084,8 @@ function _via_show_img(img_index) {
   }
 
   var img_id = _via_image_id_list[img_index];
+  document.getElementById("qa_comment").value = _img_qa_comment_list[img_index];
+  document.getElementById("img_status").value = _image_status_n2c_dict[_img_status_list[img_index]];
 
   if ( ! _via_img_metadata.hasOwnProperty(img_id) ) {
     console.log('_via_show_img(): [' + img_index + '] ' + img_id + ' does not exist!')

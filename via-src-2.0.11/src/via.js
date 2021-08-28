@@ -324,6 +324,13 @@ var _task_name= "";
 var _token= "";
 var _stream_id= "";
 
+var _img_qa_comment_list= []
+
+var _img_status_list= []
+
+var _image_status_chinese= ["未分配",, "已审批通过", "未审批"]
+var _image_status_dict= {4: "被驳回", 0: "标注中", 1:"审批通过", 2:"审批通过"}
+
 function file_metadata(filename, size) {
   this.filename = filename;
   this.size     = size;         // file size in bytes
@@ -372,6 +379,8 @@ function _via_init() {
   // attribute_update_panel_set_active_button();
   //annotation_editor_set_active_button();
   init_message_panel();
+
+
   //loadProject()
   // run attached sub-modules (if any)
   // e.g. demo modules
@@ -381,11 +390,21 @@ function _via_init() {
       await _via_load_submodules();
     }, 100);
   }
-  document.getElementById('img_status').value='labeling';
-  document.getElementById('img_comment').value='第一个框标注错误了';
   loadProject();
 
+}
+function init_via_attributes(){
 
+     for(var attr_id in _via_attributes["region"]){
+       var default_value= "";
+       for(var key in _via_attributes['region'][attr_id].default_options){
+            default_value= key;
+       };
+       if(default_value!= ""){
+         _via_attributes['region'][attr_id].default_options= default_value;
+       }
+
+     }
 }
 
 function loadProject(){
@@ -393,8 +412,6 @@ function loadProject(){
    _via_redraw_reg_canvas();
   draw_all_regions();
   draw_all_region_id();
-
-   //alert("加载完毕");
 }
 
 function getQueryVariable(variable) {
@@ -426,8 +443,12 @@ function loadViaProjectJson(){
          "_via_attributes": res["via_attributes"],
          "_via_img_metadata": res["via_img_metadata"],
          "_via_image_id_list": res["via_image_id_list"]
-       }
-       project_open_parse_json_file(via_project_info)
+       };
+       _img_qa_comment_list= res["qa_comment_list"];
+       _img_status_list=  res["img_status_list"];
+       project_open_parse_json_file(via_project_info);
+      //fix bug 初始化默认值
+      init_via_attributes();
     }
   };
   //alert("load finish");
@@ -7294,7 +7315,8 @@ function project_save_confirmed(input) {
     'via_attributes': _via_attributes,
     'via_data_format_version': '2.0.10',
     'via_image_id_list': _via_image_id_list,
-    'taskName': getQueryVariable("taskName")
+    'taskName': getQueryVariable("taskName"),
+    'stream_id':  getQueryVariable("streamId")
   };
   var ajaxObj = new XMLHttpRequest();
   ajaxObj.open("POST", _url + "/business/labelVia/updateViaInfo", true);
@@ -7320,7 +7342,8 @@ function project_commit_confirmed(input) {
     'via_attributes': _via_attributes,
     'via_data_format_version': '2.0.10',
     'via_image_id_list': _via_image_id_list,
-    'task_name': getQueryVariable("taskName")
+    'task_name': getQueryVariable("taskName"),
+    'stream_id':  getQueryVariable("streamId")
   };
   var ajaxObj = new XMLHttpRequest();
   ajaxObj.open("POST", _url + "/business/labelVia/commitViaInfo", true);
@@ -7360,6 +7383,7 @@ function project_save_with_confirm() {
                  'save_via_settings':true};
   //invoke_with_user_inputs(project_save_confirmed, input, config);
   project_save_confirmed(input, "/business/labelVia/updateViaInfo")
+  alert("保存成功");
 }
 
 function project_commit_with_confirm() {
@@ -7377,7 +7401,9 @@ function project_commit_with_confirm() {
     'save_attributes':true,
     'save_via_settings':true};
   //invoke_with_user_inputs(project_save_confirmed, input, config);
-  project_save_confirmed(input, "/business/labelVia/commitViaInfo" )
+  project_save_confirmed(input, "/business/labelVia/commitViaInfo");
+  alert("提交成功");
+  window.close();
 }
 
 function project_save_confirmed(input, router) {
@@ -7391,7 +7417,8 @@ function project_save_confirmed(input, router) {
                        'via_attributes': _via_attributes,
                        'via_data_format_version': '2.0.10',
                        'via_image_id_list': _via_image_id_list,
-                       'taskName': getQueryVariable("taskName")
+                       'taskName': getQueryVariable("taskName"),
+                       'stream_id':  getQueryVariable("streamId")
                      };
   var ajaxObj=new XMLHttpRequest();
   ajaxObj.open("POST",_url+ router,true);
@@ -7401,7 +7428,6 @@ function project_save_confirmed(input, router) {
 
   ajaxObj.onreadystatechange= function () {
     if (ajaxObj.readyState === 4 && ajaxObj.status) {
-      alert("保存成功");
     }
   };
 
@@ -7484,7 +7510,9 @@ function project_open_select_project_file() {
     invisible_file_input.onchange = project_open;
     invisible_file_input.removeAttribute('multiple');
     invisible_file_input.click();
-  }
+  };
+  //fix bug
+  init_via_attributes();
 }
 
 function project_open(event) {
@@ -9372,7 +9400,8 @@ function _via_show_img(img_index) {
   }
 
   var img_id = _via_image_id_list[img_index];
-
+  document.getElementById("qa_comment").value = _img_qa_comment_list[img_index];
+  document.getElementById("img_status").value = _image_status_dict[ _img_status_list[ img_index]];
   if ( ! _via_img_metadata.hasOwnProperty(img_id) ) {
     console.log('_via_show_img(): [' + img_index + '] ' + img_id + ' does not exist!')
     show_message('The requested image does not exist!')
