@@ -2042,6 +2042,8 @@ function _via_reg_canvas_mouseup_handler(e) {
 
       rect_update_corner(_via_region_edge[1], d, mx, my, preserve_aspect_ratio);
       rect_standardize_coordinates(d);
+      annotation_editor_show()
+
 
       var w = Math.abs(d[2] - d[0]);
       var h = Math.abs(d[3] - d[1]);
@@ -6364,7 +6366,8 @@ function annotation_editor_get_placement(region_id) {
   var shape = r['name'];
   switch( shape ) {
   case 'rect':
-    html_position.top = r['y'] + r['height'];
+    //html_position.top = r['y'] + r['height'];
+    html_position.top = r['y'];
     html_position.left = r['x'] + r['width'];
     break;
   case 'circle':
