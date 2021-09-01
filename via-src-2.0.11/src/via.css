@@ -1,4 +1,4 @@
-/* 
+/*
   CSS style definitions for VIA 2.x.y
   http://www.robots.ox.ac.uk/~vgg/software/via/
   Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
@@ -179,6 +179,13 @@ ul.region_shape .selected { fill:#ffffff; stroke:#ff0000; }
 #img_fn_list .error     { color:red; }
 #img_fn_list .sel       { border-left:0.2rem solid black !important; font-weight:bold; }
 #img_fn_list .buffered  { border-left:0.2rem solid #cccccc; }
+
+#img_fn_list .unLabeled       { color:silver; }
+#img_fn_list .labeled       { color:green;}
+
+#img_fn_list .reject     { color:red; }
+#img_fn_list .pass     { color:green;}
+#img_fn_list .unTreated     { color:silver;}
 
 #message_panel         { display:block; width:100%; position:fixed; bottom:0px; z-index:9999; text-align:center; }
 #message_panel .content { display:inline; margin:auto; background-color:#000000; color:#ffff00; font-size:small; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:2rem; padding: 0.5rem 2rem;}

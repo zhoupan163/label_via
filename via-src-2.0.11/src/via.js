@@ -412,6 +412,7 @@ function loadProject(){
    _via_redraw_reg_canvas();
   draw_all_regions();
   draw_all_region_id();
+  update_img_fn_list();
 }
 
 function getQueryVariable(variable) {
@@ -2931,6 +2932,7 @@ function _via_redraw_reg_canvas() {
       }
     }
   }
+  update_img_fn_list();
 }
 
 function _via_clear_reg_canvas() {
@@ -5189,7 +5191,24 @@ function img_fn_list_ith_entry_html(i) {
       // highlight the current entry
       htmli += ' class="sel"';
     }
-  }
+  };
+  //第一次标注  非驳回情况
+  if(_img_status_list.indexOf(4)== -1) {
+    if (_via_img_metadata[_via_image_id_list[i]].regions.length > 0) {
+      htmli += ' class="labeled"';
+      //alert("不为空")
+    } else {
+      htmli += ' class="unLabeled"';
+    }
+  //被驳回
+  }else{
+     if(_img_status_list[i]== 4){
+       htmli += ' class="reject"';
+     }else{
+      htmli += ' class="pass"';
+    }
+  };
+
   htmli += ' onclick="jump_to_image(' + (i) + ')" title="' + _via_image_filename_list[i] + '">[' + (i+1) + '] ' + decodeURIComponent(filename) + '</li>';
   return htmli;
 }
@@ -7400,6 +7419,15 @@ function project_commit_with_confirm() {
   //                'save_base64_data':{ type:'checkbox', name:'Save base64 data of images (if present)', checked:false},
   //                'save_images':{type:'checkbox', 'name':'Save images <span class="warning">(WARNING: only recommended for projects containing small number of images)</span>', value:false},
   // };
+  var i=0;
+  for(var image in _via_image_id_list){
+       i+=1;
+     if(_via_img_metadata[_via_image_id_list[image]].regions.length<1){
+       alert("第" + i.toString() +"张图片未标注，不允许提交");
+       jump_to_image(i-1);
+       return;
+     }
+  }
   var input = { 'project_name': 'test0817', 'save_annotations':true,
     'save_attributes':true,
     'save_via_settings':true};

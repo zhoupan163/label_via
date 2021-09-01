@@ -344,8 +344,7 @@ function loadProject(){
    _via_redraw_reg_canvas();
   draw_all_regions();
   //draw_all_region_id();
-
-   //alert("加载完毕");
+  update_img_fn_list();
 }
 
 function getQueryVariable(variable) {
@@ -393,21 +392,21 @@ function _via_init_reg_canvas_context() {
 }
 
 function _via_init_keyboard_handlers() {
-  window.addEventListener('keydown', _via_window_keydown_handler, false);
-  _via_reg_canvas.addEventListener('keydown', _via_reg_canvas_keydown_handler, false);
-  _via_reg_canvas.addEventListener('keyup', _via_reg_canvas_keyup_handler, false);
+  //window.addEventListener('keydown', _via_window_keydown_handler, false);
+  //_via_reg_canvas.addEventListener('keydown', _via_reg_canvas_keydown_handler, false);
+  //_via_reg_canvas.addEventListener('keyup', _via_reg_canvas_keyup_handler, false);
 }
 
 // handles drawing of regions over image by the user
 
 function _via_init_mouse_handlers() {
   _via_reg_canvas.addEventListener('dblclick', _via_reg_canvas_dblclick_handler, false);
-  _via_reg_canvas.addEventListener('mousedown', _via_reg_canvas_mousedown_handler, false);
-  _via_reg_canvas.addEventListener('mouseup', _via_reg_canvas_mouseup_handler, false);
+  //_via_reg_canvas.addEventListener('mousedown', _via_reg_canvas_mousedown_handler, false);
+  //_via_reg_canvas.addEventListener('mouseup', _via_reg_canvas_mouseup_handler, false);
 }
 
 function qa(value){
-  var qa_comment="";
+  //var qa_comment="";
   var image_status_chinese= document.getElementById("img_status").value;
   var qa_comment = document.getElementById("qa_comment").value;
   if(value == 4 && qa_comment== ""){
@@ -432,6 +431,7 @@ function qa(value){
 function qa_commit(){
   if(_img_status_list.indexOf(0)!= -1){
     alert("存在未审批的图片，不允许提交");
+    jump_to_image(_img_status_list.indexOf(0));
     return;
   }
   //只需要修改 comment 和 image_status
@@ -2853,7 +2853,8 @@ function _via_redraw_reg_canvas() {
         draw_all_region_id();
       }
     }
-  }
+  };
+  update_img_fn_list();
 }
 
 function _via_clear_reg_canvas() {
@@ -5114,6 +5115,13 @@ function img_fn_list_ith_entry_html(i) {
       // highlight the current entry
       htmli += ' class="sel"';
     }
+  };
+  if(_img_status_list[i] ==0){
+    htmli += ' class="unTreated"';
+  }else if(_img_status_list[i] ==4){
+    htmli += ' class="reject"';
+  }else{
+    htmli += ' class="pass"';
   }
   htmli += ' onclick="jump_to_image(' + (i) + ')" title="' + _via_image_filename_list[i] + '">[' + (i+1) + '] ' + decodeURIComponent(filename) + '</li>';
   return htmli;
@@ -6231,6 +6239,7 @@ function annotation_editor_show() {
         var html_position = annotation_editor_get_placement(_via_user_sel_region_id);
         ae.style.top = html_position.top;
         ae.style.left = html_position.left;
+        ae.style.pointerEvents= "none";
       }
       _via_display_area.appendChild(ae);
       annotation_editor_update_content();
@@ -6247,7 +6256,7 @@ function annotation_editor_show() {
       annotation_editor_scroll_to_row(_via_user_sel_region_id);
       annotation_editor_highlight_row(_via_user_sel_region_id);
     }
-  }
+  };
 }
 
 function annotation_editor_hide() {
