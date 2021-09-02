@@ -474,16 +474,16 @@ function _via_init_mouse_handlers() {
 
   _via_reg_canvas.addEventListener('mousedown', _via_reg_canvas_mousedown_handler, false);
   _via_reg_canvas.addEventListener('mouseup', _via_reg_canvas_mouseup_handler, false);
-  //_via_reg_canvas.addEventListener('mouseover', _via_reg_canvas_mouseover_handler, false);
-  //_via_reg_canvas.addEventListener('mousemove', _via_reg_canvas_mousemove_handler, false);
-  //_via_reg_canvas.addEventListener('wheel', _via_reg_canvas_mouse_wheel_listener, false);
+  _via_reg_canvas.addEventListener('mouseover', _via_reg_canvas_mouseover_handler, false);
+  _via_reg_canvas.addEventListener('mousemove', _via_reg_canvas_mousemove_handler, false);
+  _via_reg_canvas.addEventListener('wheel', _via_reg_canvas_mouse_wheel_listener, false);
   // touch screen event handlers
   // @todo: adapt for mobile users
-  /*
+
   _via_reg_canvas.addEventListener('touchstart', _via_reg_canvas_mousedown_handler, false);
   _via_reg_canvas.addEventListener('touchend', _via_reg_canvas_mouseup_handler, false);
   _via_reg_canvas.addEventListener('touchmove', _via_reg_canvas_mousemove_handler, false);
-  */
+
 }
 
 //
@@ -2043,7 +2043,7 @@ function _via_reg_canvas_mouseup_handler(e) {
 
       rect_update_corner(_via_region_edge[1], d, mx, my, preserve_aspect_ratio);
       rect_standardize_coordinates(d);
-      annotation_editor_show()
+      annotation_editor_show();
 
 
       var w = Math.abs(d[2] - d[0]);
