@@ -303,11 +303,13 @@ _via_settings.core.buffer_size = 4 * VIA_IMG_PRELOAD_COUNT + 2;
 _via_settings.core.filepath = {};
 _via_settings.core.default_filepath = "";
 
+var optionCropDoms = []; // 暂存切割的显示dom
+
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
-var display_area = document.getElementById("display_area");
-var ui_top_panel = document.getElementById("ui_top_panel");
-var image_panel = document.getElementById("image_panel");
+var display_area = document.getElementById("display_area"); // 右侧展示区域的包裹
+var ui_top_panel = document.getElementById("ui_top_panel"); // 操作区域的包裹
+var image_panel = document.getElementById("image_panel"); // 右侧图片展示的包裹
 var img_buffer_now = document.getElementById("img_buffer_now");
 
 var annotation_list_snippet = document.getElementById(
@@ -395,7 +397,6 @@ function _via_init() {
   document.getElementById("leftsidebar").style.display = "table-cell";
 
   // initialize default project
-
   project_init_default_project();
 
   // initialize region canvas 2D context
@@ -497,34 +498,6 @@ function loadViaProjectJson() {
   //alert("load finish");
 }
 
-function discard(img_id) {
-  _task_name = getQueryVariable("taskName");
-  _token = getQueryVariable("token");
-  _stream_id = getQueryVariable("streamId");
-  var ajaxObj = new XMLHttpRequest();
-  var ajaxObj = new XMLHttpRequest();
-
-  //ajaxObj.open("GET","http://www.baidu.com/");
-  ajaxObj.open(
-    "PUT",
-    _url +
-      "/business/labelVia/discardImg?taskName=" +
-      _task_name.toString() +
-      "&streamId=" +
-      _stream_id.toString() +
-      "&imageId=" +
-      img_id,
-    false
-  );
-  ajaxObj.setRequestHeader("Authorization", "Bearer " + _token.toString());
-  ajaxObj.send();
-  if (ajaxObj.readyState === 4 && ajaxObj.status) {
-    var res = JSON.parse(ajaxObj.response);
-    alert(res);
-  }
-  return res[msg];
-}
-
 function _via_init_reg_canvas_context() {
   _via_reg_ctx = _via_reg_canvas.getContext("2d");
 }
@@ -572,29 +545,14 @@ function _via_init_mouse_handlers() {
     _via_reg_canvas_mousemove_handler,
     false
   );
-  _via_reg_canvas.addEventListener(
-    "wheel",
-    _via_reg_canvas_mouse_wheel_listener,
-    false
-  );
+  //_via_reg_canvas.addEventListener('wheel', _via_reg_canvas_mouse_wheel_listener, false);
   // touch screen event handlers
   // @todo: adapt for mobile users
-
-  _via_reg_canvas.addEventListener(
-    "touchstart",
-    _via_reg_canvas_mousedown_handler,
-    false
-  );
-  _via_reg_canvas.addEventListener(
-    "touchend",
-    _via_reg_canvas_mouseup_handler,
-    false
-  );
-  _via_reg_canvas.addEventListener(
-    "touchmove",
-    _via_reg_canvas_mousemove_handler,
-    false
-  );
+  /*
+  _via_reg_canvas.addEventListener('touchstart', _via_reg_canvas_mousedown_handler, false);
+  _via_reg_canvas.addEventListener('touchend', _via_reg_canvas_mouseup_handler, false);
+  _via_reg_canvas.addEventListener('touchmove', _via_reg_canvas_mousemove_handler, false);
+  */
 }
 
 //
@@ -2230,6 +2188,7 @@ function _via_reg_canvas_mousedown_handler(e) {
 //  - moving/resizing/select/unselect existing region
 function _via_reg_canvas_mouseup_handler(e) {
   e.stopPropagation();
+  optionCropDoms = [];// 属性展示栏消失时，清空切割的dom展示数组
   _via_click_x1 = e.offsetX;
   _via_click_y1 = e.offsetY;
 
@@ -2840,6 +2799,7 @@ function _via_reg_canvas_mouseup_handler(e) {
 
 function _via_reg_canvas_mouseover_handler(e) {
   // change the mouse cursor icon
+  console.log(111);
   _via_redraw_reg_canvas();
   _via_reg_canvas.focus();
 }
@@ -2860,6 +2820,7 @@ function _via_reg_canvas_mousemove_handler(e) {
     rf.innerHTML = "X:" + img_x + "," + " Y:" + img_y;
   }
 
+  // 如果有区域被选中
   if (_via_is_region_selected) {
     // display the region's info if a region is selected
     if (
@@ -2870,6 +2831,7 @@ function _via_reg_canvas_mousemove_handler(e) {
       var canvas_attr =
         _via_canvas_regions[_via_user_sel_region_id].shape_attributes;
       switch (canvas_attr["name"]) {
+        // 绘制图形为矩形时不做任何提示
         case VIA_REGION_SHAPE.RECT:
           break;
 
@@ -7970,6 +7932,11 @@ function annotation_editor_get_metadata_row_html(row_id) {
         for (option_id in options) {
           var option_html_id = attr_html_id + "__" + option_id;
           var option = document.createElement("input");
+
+          if (attr_id === "crop") {
+            optionCropDoms.push(option);
+          }
+
           option.setAttribute("type", "checkbox");
           option.setAttribute("value", option_id);
           option.setAttribute("id", option_html_id);
@@ -7979,7 +7946,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
           );
           option.setAttribute(
             "onchange",
-            "annotation_editor_on_metadata_update(this)"
+            `annotation_editor_on_metadata_update(this, '${attr_id}')`
           );
 
           var option_desc =
@@ -8007,6 +7974,29 @@ function annotation_editor_get_metadata_row_html(row_id) {
           container.appendChild(label);
           col.appendChild(container);
         }
+
+         // 切割属性要单独判断
+         if (attr_id === "crop") {
+          for (let i = 0; i < optionCropDoms.length; i++) {
+            let option = optionCropDoms[i];
+            if (option.value == "0") {
+              // 如果选中了'无切割'，则其他选项禁止选中
+              if (option.checked) {
+                for (let j = 0; j < optionCropDoms.length; j++) {
+                  if (!optionCropDoms[j].checked) {
+                    optionCropDoms[j].setAttribute("disabled", true);
+                  }
+                }
+              } else {
+                option.setAttribute("disabled", true);
+              }
+            } else {
+              // 如果选中了'无切割'之外的其他选项，则'无切割'选项禁止选中
+              // optionCropDoms[0].setAttribute('disabled', true)
+            }
+          }
+        }
+
         break;
       case "radio":
         var option_id;
@@ -8292,7 +8282,39 @@ function annotation_editor_on_metadata_focus(p) {
 }
 
 // invoked when the user updates annotations using the annotation editor
-function annotation_editor_on_metadata_update(p) {
+function annotation_editor_on_metadata_update(p, attr_id) {
+   // 切割属性要单独判断
+   if (attr_id === "crop") {
+    if (p.value == "0") {
+      // 如果选中了'无切割'，则其他选项禁止选中
+      if (p.checked) {
+        for (let j = 0; j < optionCropDoms.length; j++) {
+          if (optionCropDoms[j].value != "0") {
+            optionCropDoms[j].setAttribute("disabled", true);
+          }
+        }
+      } else {
+        for (let j = 0; j < optionCropDoms.length; j++) {
+          if (optionCropDoms[j].value != "0") {
+            optionCropDoms[j].disabled = false;
+          }
+        }
+      }
+    } else {
+      // 如果选中了'无切割'之外的其他选项，则'无切割'选项禁止选中
+      let d = optionCropDoms.find((dom) => dom.value == "0");
+      if (p.checked) {
+        d && d.setAttribute("disabled", true);
+      } else {
+        // 查询是否还有其他选项被勾选，当所有的非'无切割'选项都未勾选时，'无切割'选项才允许勾选
+        let result = optionCropDoms.find((dom) => dom.checked);
+        if (!result) {
+          d.disabled = false;
+        }
+      }
+    }
+  }
+
   var pid = annotation_editor_extract_html_id_components(p.id);
   var img_id = _via_image_id;
 
@@ -9185,8 +9207,8 @@ function project_file_remove_with_confirm() {
       size: 8,
     },
   };
+
   invoke_with_user_inputs(project_file_remove_confirmed, input, config);
-  discard(img_id);
 }
 
 function project_file_remove_confirmed(input) {
