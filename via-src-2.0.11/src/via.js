@@ -455,6 +455,25 @@ function loadViaProjectJson(){
   //alert("load finish");
 }
 
+function discard(img_id){
+  _task_name=getQueryVariable("taskName");
+  _token=getQueryVariable("token");
+  _stream_id=getQueryVariable("streamId")
+  var ajaxObj=new XMLHttpRequest();
+  var ajaxObj=new XMLHttpRequest();
+
+  //ajaxObj.open("GET","http://www.baidu.com/");
+  ajaxObj.open("PUT",_url+ "/business/labelVia/discardImg?taskName="+ _task_name.toString() + "&streamId=" +_stream_id.toString()
+      +"&imageId="+ img_id,false);
+  ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());
+  ajaxObj.send();
+  if (ajaxObj.readyState === 4 && ajaxObj.status) {
+     var res= JSON.parse(ajaxObj.response);
+     alert(res);
+  }
+   return res[msg];
+}
+
 
 function _via_init_reg_canvas_context() {
   _via_reg_ctx  = _via_reg_canvas.getContext('2d');
@@ -7699,8 +7718,8 @@ function project_file_remove_with_confirm() {
                 'filename':{ type:'text', name:'Filename', value:filename, disabled:true, size:30},
                 'region_count':{ type:'text', name:'Number of regions', disabled:true, value:region_count, size:8}
               };
-
   invoke_with_user_inputs(project_file_remove_confirmed, input, config);
+  discard(img_id);
 }
 
 function project_file_remove_confirmed(input) {
