@@ -7542,6 +7542,17 @@ function annotation_editor_update_content() {
       ae.innerHTML = "";
       annotation_editor_update_header_html();
       annotation_editor_update_metadata_html();
+      var r = _via_canvas_regions[_via_user_sel_region_id]["shape_attributes"];
+      if (
+        ae.clientWidth + r["x"] + r["width"] >
+        _via_display_area.clientWidth
+      ) {
+        console.log("属性框应该展示在左边");
+        // 属性框就需要放到左边
+        let width = ae.getBoundingClientRect().width;
+        let left = _via_img_panel.getBoundingClientRect().x;
+        ae.style.left = left + r["x"] - width - 20 + "px";
+      }
     }
     ok_callback();
   });
@@ -7750,7 +7761,7 @@ function annotation_editor_add_row(row_id) {
 
 function annotation_editor_get_metadata_row_html(row_id) {
   var row = document.createElement("div");
-  row.setAttribute("class", "row");
+  row.setAttribute("class", "row attr_row");
   row.setAttribute("id", "ae_" + _via_metadata_being_updated + "_" + row_id);
 
   if (_via_metadata_being_updated === "region") {
@@ -7967,6 +7978,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
           option.setAttribute("type", "checkbox");
           option.setAttribute("value", option_id);
           option.setAttribute("id", option_html_id);
+          option.setAttribute("class", attr_id);
           option.setAttribute(
             "onfocus",
             "annotation_editor_on_metadata_focus(this)"
