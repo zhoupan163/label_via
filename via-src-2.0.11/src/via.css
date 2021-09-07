@@ -1,15 +1,18 @@
-/*
+/* 
   CSS style definitions for VIA 2.x.y
   http://www.robots.ox.ac.uk/~vgg/software/via/
   Author: Abhishek Dutta <adutta@robots.ox.ac.uk>
   Date: moved from index.html to via.css on 13 June 2019
 */
-
+html {
+  height: 100%;
+}
 body {
   min-width: 200px;
   padding: 0;
   margin: 0;
   font-family: sans-serif;
+  height: 100%;
 }
 * {
   box-sizing: border-box;
@@ -36,6 +39,8 @@ textarea {
   color: #ffffff;
   z-index: 1001;
   margin-bottom: 1rem;
+  height: 40px;
+  margin-bottom: 10px;
 }
 
 /* Navigation menu bar that appear at the top */
@@ -138,18 +143,19 @@ textarea {
   width: 100%;
   z-index: 1;
   padding: 0;
+  height: calc(100% - 50px);
 }
 #leftsidebar {
   display: none;
   z-index: 10;
   vertical-align: top;
+  padding-right: 15px;
 }
 #display_area {
   display: table-cell;
   width: 100%;
   z-index: 1;
   margin: 0;
-  padding-left: 1em;
   vertical-align: top;
 }
 /* layers of canvas */
