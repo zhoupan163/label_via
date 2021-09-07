@@ -7761,7 +7761,7 @@ function annotation_editor_add_row(row_id) {
 
 function annotation_editor_get_metadata_row_html(row_id) {
   var row = document.createElement("div");
-  row.setAttribute("class", "row");
+  row.setAttribute("class", "row attr_row");
   row.setAttribute("id", "ae_" + _via_metadata_being_updated + "_" + row_id);
 
   if (_via_metadata_being_updated === "region") {
@@ -7978,6 +7978,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
           option.setAttribute("type", "checkbox");
           option.setAttribute("value", option_id);
           option.setAttribute("id", option_html_id);
+          option.setAttribute("class", attr_id);
           option.setAttribute(
             "onfocus",
             "annotation_editor_on_metadata_focus(this)"
