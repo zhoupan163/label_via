@@ -7542,6 +7542,17 @@ function annotation_editor_update_content() {
       ae.innerHTML = "";
       annotation_editor_update_header_html();
       annotation_editor_update_metadata_html();
+      var r = _via_canvas_regions[_via_user_sel_region_id]["shape_attributes"];
+      if (
+        ae.clientWidth + r["x"] + r["width"] >
+        _via_display_area.clientWidth
+      ) {
+        console.log("属性框应该展示在左边");
+        // 属性框就需要放到左边
+        let width = ae.getBoundingClientRect().width;
+        let left = _via_img_panel.getBoundingClientRect().x;
+        ae.style.left = left + r["x"] - width - 20 + "px";
+      }
     }
     ok_callback();
   });
