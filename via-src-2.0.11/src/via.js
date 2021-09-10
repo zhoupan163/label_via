@@ -348,8 +348,8 @@ var _via_attributes_region_list = []; //region list
 // Data structure to store metadata about file and regions
 //
 //var _url= "http://localhost:8080";
-var _url = "http://10.66.66.121:8080";
-var _task_name = "";
+var _url = "http://10.66.66.121:8081";
+var _task_id = "";
 var _token = "";
 var _stream_id = "";
 
@@ -363,6 +363,7 @@ var _image_status_dict = {
   0: "标注中",
   1: "审批通过",
   2: "审批通过",
+  3: "审批通过",
 };
 
 function file_metadata(filename, size) {
@@ -458,9 +459,31 @@ function getQueryVariable(variable) {
   }
   return false;
 }
-
+function discardImg(jpgUrl) {
+  _task_id = getQueryVariable("taskId");
+  _token = getQueryVariable("token");
+  _stream_id = getQueryVariable("streamId");
+  var ajaxObj = new XMLHttpRequest();
+  ajaxObj.open(
+      "GET",
+      _url +
+      "/business/labelVia/discardImg?taskId=" +
+      _task_id.toString() +
+      "&streamId=" +
+      _stream_id.toString() +
+      "&type=label"+
+      "&jpgUrl="+ jpgUrl,
+      true
+  );
+  ajaxObj.setRequestHeader("Authorization", "Bearer " + _token.toString());
+  ajaxObj.send();
+  ajaxObj.onreadystatechange = function () {
+    if (ajaxObj.readyState === 4 && ajaxObj.status) {
+    }
+  }
+}
 function loadViaProjectJson() {
-  _task_name = getQueryVariable("taskName");
+  _task_id = getQueryVariable("taskId");
   _token = getQueryVariable("token");
   _stream_id = getQueryVariable("streamId");
   var ajaxObj = new XMLHttpRequest();
@@ -469,8 +492,8 @@ function loadViaProjectJson() {
   ajaxObj.open(
     "GET",
     _url +
-      "/business/labelVia/getTaskViaInfo?taskName=" +
-      _task_name.toString() +
+      "/business/labelVia/getTaskViaInfo?taskId=" +
+      _task_id.toString() +
       "&streamId=" +
       _stream_id.toString() +
       "&type=label",
@@ -552,11 +575,11 @@ function _via_init_mouse_handlers() {
         // 绘制的时候越界
         if (_via_is_user_drawing_region) {
           _via_reg_canvas_mouseup_handler(e)
-          console.log("越界了");          
+          console.log("越界了");
         }
         // 拖拽的时候越界 TODO:
       }
-      
+
     },
     false
   );
@@ -8826,7 +8849,7 @@ function project_save_confirmed(input) {
     via_attributes: _via_attributes,
     via_data_format_version: "2.0.10",
     via_image_id_list: _via_image_id_list,
-    taskName: getQueryVariable("taskName"),
+    taskId: getQueryVariable("taskId"),
     stream_id: getQueryVariable("streamId"),
   };
   var ajaxObj = new XMLHttpRequest();
@@ -8853,7 +8876,7 @@ function project_commit_confirmed(input) {
     via_attributes: _via_attributes,
     via_data_format_version: "2.0.10",
     via_image_id_list: _via_image_id_list,
-    task_name: getQueryVariable("taskName"),
+    task_name: getQueryVariable("taskId"),
     stream_id: getQueryVariable("streamId"),
   };
   var ajaxObj = new XMLHttpRequest();
@@ -8964,7 +8987,7 @@ function project_save_confirmed(input, router) {
     via_attributes: _via_attributes,
     via_data_format_version: "2.0.10",
     via_image_id_list: _via_image_id_list,
-    taskName: getQueryVariable("taskName"),
+    taskId: getQueryVariable("taskId"),
     stream_id: getQueryVariable("streamId"),
   };
   var ajaxObj = new XMLHttpRequest();
@@ -9266,6 +9289,7 @@ function project_file_remove_confirmed(input) {
   }
   _via_reload_img_fn_list_table = true;
   update_img_fn_list();
+  discardImg(_via_image_id_list[img_index]);
   show_message("Removed file [" + input.filename.value + "] from project");
   user_input_default_cancel_handler();
 }

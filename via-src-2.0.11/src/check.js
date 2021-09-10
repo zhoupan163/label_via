@@ -268,8 +268,8 @@ var _via_attributes_region_list = [];    //region list
 // Data structure to store metadata about file and regions
 //
 //var _url= "http://localhost:8080";
-var _url= "http://10.66.66.121:8080";
-var _task_name= "";
+var _url= "http://10.66.66.121:8081";
+var _task_id= "";
 var _token= "";
 var _stream_id= "";
 
@@ -358,21 +358,19 @@ function getQueryVariable(variable) {
 }
 
 function loadViaProjectJson(){
-  _task_name=getQueryVariable("taskName");
+  _task_id=getQueryVariable("taskId");
   _token=getQueryVariable("token");
   _qa_type=getQueryVariable("qa_type");
   _stream_id=getQueryVariable("streamId")
   var ajaxObj=new XMLHttpRequest();
 
-  //ajaxObj.open("GET","http://www.baidu.com/");
-  ajaxObj.open("GET",_url+ "/business/labelVia/getTaskViaInfo?taskName="+ _task_name.toString() + "&streamId=" +_stream_id+ "&type="+ _qa_type,true);
+  ajaxObj.open("GET",_url+ "/business/labelVia/getTaskViaInfo?taskId="+ _task_id.toString() + "&streamId=" +_stream_id+ "&type="+ _qa_type,true);
   ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());
   ajaxObj.send();
   ajaxObj.onreadystatechange= function () {
     if (ajaxObj.readyState === 4 && ajaxObj.status) {
        var res=JSON.parse(ajaxObj.response).rows[0];
        var via_project_info={
-         //if ( d['_via_settings'] && d['_via_img_metadata'] && d['_via_attributes'] ) {
          "_via_settings": res["via_settings"],
          "_via_attributes": res["via_attributes"],
          "_via_img_metadata": res["via_img_metadata"],
@@ -443,7 +441,7 @@ function qa_commit(){
       "imgList": _via_image_id_list,
       "imgStatusList": _img_status_list,
       "imgQaCommentList": _img_qa_comment_list,
-      "taskName": _task_name,
+      "taskId": _task_id,
       "qaType": _qa_type,
       "streamId": _stream_id
   };
