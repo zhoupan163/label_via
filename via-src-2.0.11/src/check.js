@@ -281,6 +281,7 @@ var _img_status_list= []
 
 var _image_status_c2n_dict= {"驳回": 4, "通过": 1, "未审核": 0};
 var _image_status_n2c_dict= { 4: "驳回", 1: "通过", 0: "未审核"};
+var _unQaFlag= "";
 function file_metadata(filename, size) {
   this.filename = filename;
   this.size     = size;         // file size in bytes
@@ -356,11 +357,22 @@ function getQueryVariable(variable) {
   }
   return(false);
 }
-
+function  changeDict(){
+  if(_qa_type=="qa1"){
+    _image_status_c2n_dict= {"驳回": 4, "二级审核通过": 3, "一级审核通过": 2,"未审核": 1};
+    _image_status_n2c_dict= { 4: "驳回", 3: "二级审核通过", 2: "一级审核通过", 1: "未审核"};
+    _unQaFlag= 1;
+  }else{
+    _image_status_c2n_dict= {"驳回": 4, "审核通过": 3, "未审核": 2};
+    _image_status_n2c_dict= { 4: "驳回", 3: "审核通过", 2: "未审核"};
+    _unQaFlag= 2;
+  }
+}
 function loadViaProjectJson(){
   _task_id=getQueryVariable("taskId");
   _token=getQueryVariable("token");
   _qa_type=getQueryVariable("qa_type");
+  changeDict();
   _stream_id=getQueryVariable("streamId")
   var ajaxObj=new XMLHttpRequest();
 
@@ -411,15 +423,24 @@ function qa(value){
     alert("驳回操作需要输入qa备注");
     return ;
   };
-  if(value == 4 &&  _image_status_c2n_dict[image_status_chinese] == 4){
+  if(value == 4 &&  image_status_chinese== "驳回"){
     alert("该图片已处于驳回状态，请勿重复操作");
     return ;
   };
-  if(value == 1 && _image_status_c2n_dict[image_status_chinese] == 1){
+  if(value == 1 && image_status_chinese == "审核通过"){
     alert("该图片已处于通过状态，请勿重复操作");
     return ;
   };
-  _img_status_list[_via_image_index]= value;
+  if(value== 1){
+    if(_qa_type== "qa1"){
+        _img_status_list[_via_image_index]= 2
+      }else{
+        _img_status_list[_via_image_index]= 3
+      }
+  }else{
+    _img_status_list[_via_image_index]= 4;
+  }
+
   if(qa_comment!= undefined){
     _img_qa_comment_list[_via_image_index] = qa_comment;
   }
@@ -427,8 +448,8 @@ function qa(value){
 }
 
 function qa_commit(){
-  if(_img_status_list.indexOf(0)!= -1){
-    alert("存在未审批的图片，不允许提交");
+  if(_img_status_list.indexOf(_unQaFlag)!= -1){
+    alert("存在未审核的图片，不允许提交");
     jump_to_image(_img_status_list.indexOf(0));
     return;
   }
