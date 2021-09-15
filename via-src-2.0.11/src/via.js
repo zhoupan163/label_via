@@ -349,7 +349,7 @@ var _via_attributes_region_list = []; //region list
 //
 //var _url= "http://localhost:8080";
 var _url = "http://10.66.66.121:8081";
-var _task_name= "";
+var _task_name = "";
 var _token = "";
 var _stream_id = "";
 
@@ -460,30 +460,31 @@ function getQueryVariable(variable) {
   return false;
 }
 function discardImg(jpgUrl) {
-  _task_name= decodeURI(getQueryVariable("taskName"));
+  _task_name = decodeURI(getQueryVariable("taskName"));
   _token = getQueryVariable("token");
   _stream_id = getQueryVariable("streamId");
   var ajaxObj = new XMLHttpRequest();
   ajaxObj.open(
-      "GET",
-      _url +
+    "GET",
+    _url +
       "/business/labelVia/discardImg?taskName=" +
       _task_name.toString() +
       "&streamId=" +
       _stream_id.toString() +
-      "&type=label"+
-      "&jpgUrl="+ jpgUrl,
-      true
+      "&type=label" +
+      "&jpgUrl=" +
+      jpgUrl,
+    true
   );
   ajaxObj.setRequestHeader("Authorization", "Bearer " + _token.toString());
   ajaxObj.send();
   ajaxObj.onreadystatechange = function () {
     if (ajaxObj.readyState === 4 && ajaxObj.status) {
     }
-  }
+  };
 }
 function loadViaProjectJson() {
-  _task_name= decodeURI(getQueryVariable("taskName"));
+  _task_name = decodeURI(getQueryVariable("taskName"));
   _token = getQueryVariable("token");
   _stream_id = getQueryVariable("streamId");
   var ajaxObj = new XMLHttpRequest();
@@ -571,15 +572,19 @@ function _via_init_mouse_handlers() {
   document.getElementById("display_area").addEventListener(
     "mousemove",
     function (e) {
-      if (e.offsetY > _via_canvas_height || e.offsetX > _via_canvas_width || e.offsetY < 1 || e.offsetX < 1) {
+      if (
+        e.offsetY > _via_canvas_height ||
+        e.offsetX > _via_canvas_width ||
+        e.offsetY < 1 ||
+        e.offsetX < 1
+      ) {
         // 绘制的时候越界
         if (_via_is_user_drawing_region) {
-          _via_reg_canvas_mouseup_handler(e)
+          _via_reg_canvas_mouseup_handler(e);
           console.log("越界了");
         }
         // 拖拽的时候越界 TODO:
       }
-
     },
     false
   );
@@ -7827,7 +7832,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
   var attr_id;
   for (attr_id in _via_attributes[_via_metadata_being_updated]) {
     var col = document.createElement("span");
-    col.setAttribute("class", "col");
+    col.setAttribute("class", `col ${attr_id}`);
 
     var attr_type = _via_attributes[_via_metadata_being_updated][attr_id].type;
     var attr_desc = _via_attributes[_via_metadata_being_updated][attr_id].desc;
