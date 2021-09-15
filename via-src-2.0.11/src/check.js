@@ -269,7 +269,7 @@ var _via_attributes_region_list = [];    //region list
 //
 //var _url= "http://localhost:8080";
 var _url= "http://10.66.66.121:8081";
-var _task_id= "";
+var _taskName= "";
 var _token= "";
 var _stream_id= "";
 
@@ -369,14 +369,15 @@ function  changeDict(){
   }
 }
 function loadViaProjectJson(){
-  _task_id=getQueryVariable("taskId");
+  _taskName=decodeURI(getQueryVariable("taskName"));
+  alert(_taskName);
   _token=getQueryVariable("token");
   _qa_type=getQueryVariable("qa_type");
   changeDict();
   _stream_id=getQueryVariable("streamId")
   var ajaxObj=new XMLHttpRequest();
 
-  ajaxObj.open("GET",_url+ "/business/labelVia/getTaskViaInfo?taskId="+ _task_id.toString() + "&streamId=" +_stream_id+ "&type="+ _qa_type,true);
+  ajaxObj.open("GET",_url+ "/business/labelVia/getTaskViaInfo?taskName="+ _taskName.toString() + "&streamId=" +_stream_id+ "&type="+ _qa_type,true);
   ajaxObj.setRequestHeader( "Authorization", "Bearer "+ _token.toString());
   ajaxObj.send();
   ajaxObj.onreadystatechange= function () {
@@ -462,7 +463,7 @@ function qa_commit(){
       "imgList": _via_image_id_list,
       "imgStatusList": _img_status_list,
       "imgQaCommentList": _img_qa_comment_list,
-      "taskId": _task_id,
+      "taskName": _taskName,
       "qaType": _qa_type,
       "streamId": _stream_id
   };

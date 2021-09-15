@@ -349,7 +349,7 @@ var _via_attributes_region_list = []; //region list
 //
 //var _url= "http://localhost:8080";
 var _url = "http://10.66.66.121:8081";
-var _task_id = "";
+var _task_name= "";
 var _token = "";
 var _stream_id = "";
 
@@ -460,15 +460,15 @@ function getQueryVariable(variable) {
   return false;
 }
 function discardImg(jpgUrl) {
-  _task_id = getQueryVariable("taskId");
+  _task_name= decodeURI(getQueryVariable("taskName"));
   _token = getQueryVariable("token");
   _stream_id = getQueryVariable("streamId");
   var ajaxObj = new XMLHttpRequest();
   ajaxObj.open(
       "GET",
       _url +
-      "/business/labelVia/discardImg?taskId=" +
-      _task_id.toString() +
+      "/business/labelVia/discardImg?taskName=" +
+      _task_name.toString() +
       "&streamId=" +
       _stream_id.toString() +
       "&type=label"+
@@ -483,7 +483,7 @@ function discardImg(jpgUrl) {
   }
 }
 function loadViaProjectJson() {
-  _task_id = getQueryVariable("taskId");
+  _task_name= decodeURI(getQueryVariable("taskName"));
   _token = getQueryVariable("token");
   _stream_id = getQueryVariable("streamId");
   var ajaxObj = new XMLHttpRequest();
@@ -492,8 +492,8 @@ function loadViaProjectJson() {
   ajaxObj.open(
     "GET",
     _url +
-      "/business/labelVia/getTaskViaInfo?taskId=" +
-      _task_id.toString() +
+      "/business/labelVia/getTaskViaInfo?taskName=" +
+      _task_name.toString() +
       "&streamId=" +
       _stream_id.toString() +
       "&type=label",
@@ -8849,7 +8849,7 @@ function project_save_confirmed(input) {
     via_attributes: _via_attributes,
     via_data_format_version: "2.0.10",
     via_image_id_list: _via_image_id_list,
-    taskId: getQueryVariable("taskId"),
+    taskName: decodeURI(getQueryVariable("taskName")),
     stream_id: getQueryVariable("streamId"),
   };
   var ajaxObj = new XMLHttpRequest();
@@ -8876,7 +8876,7 @@ function project_commit_confirmed(input) {
     via_attributes: _via_attributes,
     via_data_format_version: "2.0.10",
     via_image_id_list: _via_image_id_list,
-    task_name: getQueryVariable("taskId"),
+    task_name: decodeURI(getQueryVariable("taskName")),
     stream_id: getQueryVariable("streamId"),
   };
   var ajaxObj = new XMLHttpRequest();
@@ -8987,7 +8987,7 @@ function project_save_confirmed(input, router) {
     via_attributes: _via_attributes,
     via_data_format_version: "2.0.10",
     via_image_id_list: _via_image_id_list,
-    taskId: getQueryVariable("taskId"),
+    taskName: decodeURI(getQueryVariable("taskName")),
     stream_id: getQueryVariable("streamId"),
   };
   var ajaxObj = new XMLHttpRequest();
