@@ -452,9 +452,17 @@ function _via_init_reg_canvas_context() {
 }
 
 function _via_init_keyboard_handlers() {
-  //window.addEventListener('keydown', _via_window_keydown_handler, false);
-  //_via_reg_canvas.addEventListener('keydown', _via_reg_canvas_keydown_handler, false);
-  //_via_reg_canvas.addEventListener('keyup', _via_reg_canvas_keyup_handler, false);
+  window.addEventListener("keydown", _via_window_keydown_handler, false);
+  _via_reg_canvas.addEventListener(
+    "keydown",
+    _via_reg_canvas_keydown_handler,
+    false
+  );
+  _via_reg_canvas.addEventListener(
+    "keyup",
+    _via_reg_canvas_keyup_handler,
+    false
+  );
 }
 
 // handles drawing of regions over image by the user
@@ -465,8 +473,39 @@ function _via_init_mouse_handlers() {
     _via_reg_canvas_dblclick_handler,
     false
   );
-  //_via_reg_canvas.addEventListener('mousedown', _via_reg_canvas_mousedown_handler, false);
-  //_via_reg_canvas.addEventListener('mouseup', _via_reg_canvas_mouseup_handler, false);
+
+  _via_reg_canvas.addEventListener(
+    "mousedown",
+    _via_reg_canvas_mousedown_handler,
+    false
+  );
+  _via_reg_canvas.addEventListener(
+    "mouseup",
+    _via_reg_canvas_mouseup_handler,
+    false
+  );
+  _via_reg_canvas.addEventListener(
+    "mouseover",
+    _via_reg_canvas_mouseover_handler,
+    false
+  );
+  _via_reg_canvas.addEventListener(
+    "mousemove",
+    _via_reg_canvas_mousemove_handler,
+    false
+  );
+  _via_reg_canvas.addEventListener(
+    "wheel",
+    _via_reg_canvas_mouse_wheel_listener,
+    false
+  );
+  // _via_reg_canvas.addEventListener(
+  //   "dblclick",
+  //   _via_reg_canvas_dblclick_handler,
+  //   false
+  // );
+  // _via_reg_canvas.addEventListener('mousedown', _via_reg_canvas_mousedown_handler, false);
+  // _via_reg_canvas.addEventListener('mouseup', _via_reg_canvas_mouseup_handler, false);
 }
 
 function qa(value) {
@@ -612,7 +651,7 @@ function sel_local_images() {
     invisible_file_input.click();
   }
 }
-
+console.log(111);
 // invoked by menu-item buttons in HTML UI
 function download_all_region_data(type, file_extension) {
   if (typeof file_extension === "undefined") {
@@ -2050,6 +2089,9 @@ function _via_reg_canvas_mousedown_handler(e) {
   if (_via_is_region_selected) {
     // check if user clicked on the region boundary
     if (_via_region_edge[1] > 0) {
+      // 对区域进行边框拖拽操作
+      // 审核时不允许对区域修改
+      return;
       if (!_via_is_user_resizing_region) {
         if (_via_region_edge[0] !== _via_user_sel_region_id) {
           _via_user_sel_region_id = _via_region_edge[0];
@@ -2064,6 +2106,9 @@ function _via_reg_canvas_mousedown_handler(e) {
         _via_user_sel_region_id
       );
       if (yes) {
+        // 对区域进行拖拽操作
+        // 审核时不允许拖拽操作
+        return;
         if (!_via_is_user_moving_region) {
           _via_is_user_moving_region = true;
           _via_region_click_x = _via_click_x0;
@@ -2072,7 +2117,8 @@ function _via_reg_canvas_mousedown_handler(e) {
       }
       if (region_id === -1) {
         // mousedown on outside any region
-        _via_is_user_drawing_region = true;
+        // 屏蔽_via_is_user_drawing_region=true  审核时不允许绘制操作
+        // _via_is_user_drawing_region = true;
         // unselect all regions
         _via_is_region_selected = false;
         _via_user_sel_region_id = -1;
@@ -2080,6 +2126,9 @@ function _via_reg_canvas_mousedown_handler(e) {
       }
     }
   } else {
+    // 绘制区域操作
+    // 审核时不允许绘制
+    return;
     if (region_id === -1) {
       // mousedown outside a region
       if (
@@ -2805,6 +2854,7 @@ function _via_reg_canvas_mousemove_handler(e) {
             _via_reg_canvas.style.cursor = "default";
             break;
         }
+        _via_reg_canvas.style.cursor = "not-allowed";
 
         if (_via_region_edge[1] >= VIA_POLYGON_RESIZE_VERTEX_OFFSET) {
           // indicates mouse over polygon vertex
@@ -4621,6 +4671,8 @@ function _via_reg_canvas_keydown_handler(e) {
     }
 
     if (e.key === "c") {
+      // 审核时不允许复制操作
+      return;
       if (_via_is_region_selected || _via_is_all_region_selected) {
         copy_sel_regions();
       }
@@ -4629,6 +4681,8 @@ function _via_reg_canvas_keydown_handler(e) {
     }
 
     if (e.key === "v") {
+      // 审核时不允许粘贴操作
+      return;
       paste_sel_regions_in_current_image();
       e.preventDefault();
       return;
@@ -4647,6 +4701,8 @@ function _via_reg_canvas_keydown_handler(e) {
     }
 
     if (e.key === "d") {
+      // 审核时不允许删除操作
+      return;
       if (_via_is_region_selected || _via_is_all_region_selected) {
         del_sel_regions();
       }
@@ -4661,6 +4717,8 @@ function _via_reg_canvas_keydown_handler(e) {
         e.key === "ArrowDown" ||
         e.key === "ArrowUp"
       ) {
+        // 审核时不允许移动绘制区域
+        return;
         var del = 1;
         if (e.shiftKey) {
           del = 10;
@@ -7360,7 +7418,7 @@ function annotation_editor_show() {
         );
         ae.style.top = html_position.top;
         ae.style.left = html_position.left;
-        ae.style.pointerEvents = "none";
+        // ae.style.pointerEvents = "none";
       }
       _via_display_area.appendChild(ae);
       annotation_editor_update_content();
@@ -7417,6 +7475,17 @@ function annotation_editor_update_content() {
       ae.innerHTML = "";
       annotation_editor_update_header_html();
       annotation_editor_update_metadata_html();
+      var r = _via_canvas_regions[_via_user_sel_region_id]["shape_attributes"];
+      if (
+        ae.clientWidth + r["x"] + r["width"] >
+        _via_display_area.clientWidth
+      ) {
+        console.log("属性框应该展示在左边");
+        // 属性框就需要放到左边
+        let width = ae.getBoundingClientRect().width;
+        let left = _via_img_panel.getBoundingClientRect().x;
+        ae.style.left = left + r["x"] - width - 20 + "px";
+      }
     }
     ok_callback();
   });
@@ -7625,7 +7694,7 @@ function annotation_editor_add_row(row_id) {
 
 function annotation_editor_get_metadata_row_html(row_id) {
   var row = document.createElement("div");
-  row.setAttribute("class", "row");
+  row.setAttribute("class", "row attr_row");
   row.setAttribute("id", "ae_" + _via_metadata_being_updated + "_" + row_id);
 
   if (_via_metadata_being_updated === "region") {
@@ -7668,7 +7737,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
   var attr_id;
   for (attr_id in _via_attributes[_via_metadata_being_updated]) {
     var col = document.createElement("span");
-    col.setAttribute("class", "col");
+    col.setAttribute("class", `col ${attr_id}`);
 
     var attr_type = _via_attributes[_via_metadata_being_updated][attr_id].type;
     var attr_desc = _via_attributes[_via_metadata_being_updated][attr_id].desc;
