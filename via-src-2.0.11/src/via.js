@@ -348,7 +348,8 @@ var _via_attributes_region_list = []; //region list
 // Data structure to store metadata about file and regions
 //
 //var _url= "http://localhost:8080";
-var _url = "http://10.66.66.121:8081";
+// var _url = "http://10.66.33.113:8081"; // prod
+var _url = "http://10.66.66.121:8081"; // test
 var _task_name = "";
 var _token = "";
 var _stream_id = "";
@@ -573,10 +574,10 @@ function _via_init_mouse_handlers() {
     "mousemove",
     function (e) {
       if (
-        e.offsetY > _via_canvas_height ||
-        e.offsetX > _via_canvas_width ||
-        e.offsetY < 1 ||
-        e.offsetX < 1
+        e.offsetY > _via_canvas_height - 10 ||
+        e.offsetX > _via_canvas_width - 10 ||
+        e.offsetY < 10 ||
+        e.offsetX < 10
       ) {
         // 绘制的时候越界
         if (_via_is_user_drawing_region) {
@@ -3894,7 +3895,7 @@ function draw_all_region_id() {
     _via_reg_ctx.fillRect(
       Math.floor(x),
       Math.floor(y - 1.1 * char_height),
-      Math.floor(5.5 * bgnd_rect_width),
+      Math.floor(1 * bgnd_rect_width),
       Math.floor(char_height)
     );
 
