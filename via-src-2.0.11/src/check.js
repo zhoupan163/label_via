@@ -294,7 +294,8 @@ var _via_attributes_region_list = []; //region list
 // Data structure to store metadata about file and regions
 //
 //var _url= "http://localhost:8080";
-var _url = "http://10.66.66.121:8081";
+// var _url = "http://10.66.33.113:8081"; // prod
+var _url = "http://10.66.66.121:8081"; // test
 var _taskName = "";
 var _token = "";
 var _stream_id = "";
@@ -387,6 +388,12 @@ function getQueryVariable(variable) {
   }
   return false;
 }
+// 根据浏览器url中的qa_type判断是否审核时进行预览
+function toggleQaComment(){
+  if (_qa_type == 'view') {
+    document.getElementById('qa_submit').style.display = 'none';
+  }
+}
 function changeDict() {
   if (_qa_type == "qa1") {
     _image_status_c2n_dict = {
@@ -414,6 +421,7 @@ function loadViaProjectJson() {
   _token = getQueryVariable("token");
   _qa_type = getQueryVariable("qa_type");
   changeDict();
+  toggleQaComment()
   _stream_id = getQueryVariable("streamId");
   var ajaxObj = new XMLHttpRequest();
 
