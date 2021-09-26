@@ -8844,32 +8844,6 @@ function project_init_default_project() {
 function project_on_name_update(p) {
   project_set_name(p.value);
 }
-function project_save_confirmed(input) {
-  if (input.project_name.value !== _via_settings.project.name) {
-    project_set_name(input.project_name.value);
-  }
-  // via project
-  var via_project = {
-    via_settings: _via_settings,
-    via_img_metadata: _via_img_metadata,
-    via_attributes: _via_attributes,
-    via_data_format_version: "2.0.10",
-    via_image_id_list: _via_image_id_list,
-    taskName: decodeURI(getQueryVariable("taskName")),
-    stream_id: getQueryVariable("streamId"),
-  };
-  var ajaxObj = new XMLHttpRequest();
-  ajaxObj.open("POST", _url + "/business/labelVia/updateViaInfo", true);
-  ajaxObj.setRequestHeader("Authorization", "Bearer " + _token.toString());
-  ajaxObj.setRequestHeader("content-type", "application/json");
-  ajaxObj.send(JSON.stringify(via_project));
-
-  ajaxObj.onreadystatechange = function () {
-    if (ajaxObj.readyState === 4 && ajaxObj.status) {
-      alert("提交成功");
-    }
-  };
-}
 
 function project_commit_confirmed(input) {
   if (input.project_name.value !== _via_settings.project.name) {
@@ -8945,8 +8919,8 @@ function project_save_with_confirm() {
     save_via_settings: true,
   };
   //invoke_with_user_inputs(project_save_confirmed, input, config);
-  project_save_confirmed(input, "/business/labelVia/updateViaInfo");
-  alert("保存成功");
+  project_save_confirmed(input, "/business/labelVia/updateViaInfo", "save");
+  // alert("保存成功");
 }
 
 function project_commit_with_confirm() {
@@ -8976,14 +8950,22 @@ function project_commit_with_confirm() {
     save_via_settings: true,
   };
   //invoke_with_user_inputs(project_save_confirmed, input, config);
-  project_save_confirmed(input, "/business/labelVia/commitViaInfo");
-  alert("提交成功");
-  window.close();
+  project_save_confirmed(input, "/business/labelVia/commitViaInfo", "submit");
+  // alert("提交成功");
+  // window.close();
 }
 
-function project_save_confirmed(input, router) {
+function project_save_confirmed(input, subUrl, saveType) {
   if (input.project_name.value !== _via_settings.project.name) {
     project_set_name(input.project_name.value);
+  }
+
+  function showFailTips() {
+    if (saveType === "submit") {
+      alert("提交失败");
+    } else if (saveType === "save") {
+      alert("保存失败");
+    }
   }
 
   // via project
@@ -8997,86 +8979,37 @@ function project_save_confirmed(input, router) {
     stream_id: getQueryVariable("streamId"),
   };
   var ajaxObj = new XMLHttpRequest();
-  ajaxObj.open("POST", _url + router, true);
+  ajaxObj.open("POST", _url + subUrl, true);
   ajaxObj.setRequestHeader("Authorization", "Bearer " + _token.toString());
   ajaxObj.setRequestHeader("content-type", "application/json");
   ajaxObj.send(JSON.stringify(via_project));
-
+  ajaxObj.timeout = 3000
   ajaxObj.onreadystatechange = function () {
-    if (ajaxObj.readyState === 4 && ajaxObj.status) {
+    if (ajaxObj.readyState === 4) {
+      console.log("save result::", ajaxObj);
+      if (ajaxObj.status === 200) {
+        try {
+          let result = JSON.parse(ajaxObj.responseText);
+          if (result.code === 200) {
+            user_input_default_cancel_handler();
+            if (saveType === "submit") {
+              alert("提交成功");
+              window.close();
+            } else if (saveType === "save") {
+              alert("保存成功");
+            }
+          } else {
+            showFailTips();
+          }
+        } catch (e) {
+          console.error("json解析失败：：");
+          showFailTips();
+        }
+      } else {
+        showFailTips();
+      }
     }
   };
-
-  /*
- var filename = input.project_name.value + '.json';
- var data_blob = new Blob( [JSON.stringify(_via_project)],
-                           {type: 'text/json;charset=utf-8'});
-
- save_data_to_local_file(data_blob, filename);
- //有bug每次只能保存十个文件 此功能取消
- //input.save_mot_style=undefined;
- if(input.save_mot_style){
-   var zip = new JSZip();
-   if(input.save_mot_style['value'] ==true){
-     //var data='1,2,3,4,5,6,7,8'
-     for (var metadata in _via_project._via_img_metadata) {
-       //解析成mot数据并保存 一张图片一个txt文件 demo.jpg对应demo.txt
-       var fname = _via_project._via_img_metadata[metadata].filename.toString()
-       if (fname == 'demo.jpg') {
-         continue
-       }
-       var imageName;
-       if (fname.includes("/")) {
-         imageName = fname.split('/').pop()
-       } else {
-         imageName = fname
-       }
-       var data = {};
-       var txtFileName = imageName.replace('jpg', 'txt').replace('img', 'txt').replace('jpeg', 'txt')
-
-       var img_id=imageName.split('.')[0].toString()
-       var data='';
-
-
-       var regions=_via_project._via_img_metadata[metadata].regions
-       for (var region in regions) {
-         var region_attributes = regions[region].region_attributes
-         var region_id = region_attributes.id
-
-         var shape_attributes = regions[region].shape_attributes
-         var x = shape_attributes.x
-         var y = shape_attributes.y
-         var w = shape_attributes.width
-         var h = shape_attributes.height
-
-         var block = region_attributes.block
-         var fuzzy = region_attributes.fuzzy
-         var side = region_attributes.side
-         var crop = region_attributes.crop
-
-         var sep = ' '
-         //data+=img_id+ sep+ region_id.toString()+ sep+ x.toString()+ sep+ y.toString()+ sep + w.toString()+sep+ h.toString() +
-         //  sep +block.toString() + sep + fuzzy.toString()+ sep +side.toString() + sep + crop.toString() +'\r\n'
-       }
-       data="1 2 0 3 4 5 6 7 8 9"
-       zip.file(txtFileName, data);
-       //alert(data)
-       //var export_blob = new Blob([data]);
-       //console.log('save mot')
-       //save_data_to_local_file(export_blob, txtFileName);
-       //alert('save motdata success!
-     }
-     zip.file("total.txt","3");
-     zip.generateAsync({type:"blob"})
-         .then(function(content) {
-           // see FileSaver.js
-           saveAs(content, "example.zip");
-         });
-
-   }
- }
- */
-  user_input_default_cancel_handler();
 }
 
 function project_open_select_project_file() {
