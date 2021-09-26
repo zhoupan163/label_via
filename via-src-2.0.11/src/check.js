@@ -389,9 +389,9 @@ function getQueryVariable(variable) {
   return false;
 }
 // 根据浏览器url中的qa_type判断是否审核时进行预览
-function toggleQaComment(){
-  if (_qa_type == 'view') {
-    document.getElementById('qa_submit').style.display = 'none';
+function toggleQaComment() {
+  if (_qa_type == "view") {
+    document.getElementById("qa_submit").style.display = "none";
   }
 }
 function changeDict() {
@@ -421,7 +421,7 @@ function loadViaProjectJson() {
   _token = getQueryVariable("token");
   _qa_type = getQueryVariable("qa_type");
   changeDict();
-  toggleQaComment()
+  toggleQaComment();
   _stream_id = getQueryVariable("streamId");
   var ajaxObj = new XMLHttpRequest();
 
@@ -5590,6 +5590,14 @@ function _via_reg_canvas_mouse_wheel_listener(e) {
       zoom_out();
     }
     e.preventDefault();
+  } else {
+    if (e.deltaY < 0) {
+      // 向上滚动
+      move_to_prev_image();
+    } else {
+      // 向下滚动
+      move_to_next_image();
+    }
   }
 }
 
