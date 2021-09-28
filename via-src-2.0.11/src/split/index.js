@@ -359,8 +359,8 @@ var _via_attributes_region_list = []; //region list
 // Data structure to store metadata about file and regions
 //
 //var _url= "http://localhost:8080";
-var _url = "http://10.66.33.113:8081"; // prod
-// var _url = "http://10.66.66.121:8081"; // test
+// var _url = "http://10.66.33.113:8081"; // prod
+var _url = "http://10.66.66.121:8081"; // test
 var _task_name = "";
 var _token = "";
 var _stream_id = "";
