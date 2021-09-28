@@ -123,6 +123,19 @@ var VIA_THEME_BOUNDARY_LINE_COLOR = "black";
 var VIA_THEME_BOUNDARY_FILL_COLOR = "yellow";
 var VIA_THEME_SEL_REGION_FILL_COLOR = "#808080";
 var VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR = "yellow";
+var VIA_THEME_SEL_REGION_FILL_COLOR_OBJ = {
+  background: "#00ff00",
+  wall: "#0000ff",
+  cabinet: "#ff00ff",
+  opened_cabinet_door: "#ff0000",
+  stair: "#9c6d6d",
+  hollowed_stair: "#3b4813",
+  glass: "#42b712",
+  overexposure_glass: "#1738dc",
+  mirror: "#2e8f94",
+  ceiling: "#2e3194",
+  curtain: "#842e94",
+};
 var VIA_THEME_SEL_REGION_OPACITY = 0.5;
 var VIA_THEME_MESSAGE_TIMEOUT_MS = 6000;
 var VIA_THEME_CONTROL_POINT_COLOR = "#ff0000";
@@ -185,7 +198,7 @@ var _via_is_debug_mode = false;
 var _via_is_message_visible = true;
 
 // region
-var _via_current_shape = VIA_REGION_SHAPE.RECT;
+var _via_current_shape = VIA_REGION_SHAPE.POLYGON;
 var _via_current_polygon_region_id = -1;
 var _via_user_sel_region_id = -1;
 var _via_click_x0 = 0;
@@ -302,8 +315,6 @@ _via_settings.core = {};
 _via_settings.core.buffer_size = 4 * VIA_IMG_PRELOAD_COUNT + 2;
 _via_settings.core.filepath = {};
 _via_settings.core.default_filepath = "";
-
-var optionCropDoms = []; // 暂存切割的显示dom
 
 // UI html elements
 var invisible_file_input = document.getElementById("invisible_file_input");
@@ -463,7 +474,7 @@ function getQueryVariable(variable) {
 function discardImg(jpgUrl) {
   _task_name = decodeURI(getQueryVariable("taskName"));
   _token = getQueryVariable("token");
-  _stream_id = getQueryVariable("streamId");
+  _stream_id = ""; //getQueryVariable("streamId");
   var ajaxObj = new XMLHttpRequest();
   ajaxObj.open(
     "GET",
@@ -487,7 +498,7 @@ function discardImg(jpgUrl) {
 function loadViaProjectJson() {
   _task_name = decodeURI(getQueryVariable("taskName"));
   _token = getQueryVariable("token");
-  _stream_id = getQueryVariable("streamId");
+  _stream_id = ""; //getQueryVariable("streamId");
   var ajaxObj = new XMLHttpRequest();
 
   //ajaxObj.open("GET","http://www.baidu.com/");
@@ -497,7 +508,7 @@ function loadViaProjectJson() {
       "/business/labelVia/getTaskViaInfo?taskName=" +
       _task_name.toString() +
       "&streamId=" +
-      _stream_id.toString() +
+      _stream_id +
       "&type=label",
     true
   );
@@ -1948,6 +1959,11 @@ function _via_load_canvas_regions() {
     for (var key in regions[i].shape_attributes) {
       region_i.shape_attributes[key] = regions[i].shape_attributes[key];
     }
+    for (var key in regions[i].region_attributes) {
+      if (key === "type") {
+        region_i.shape_attributes[key] = regions[i].region_attributes[key];
+      }
+    }
     _via_canvas_regions.push(region_i);
 
     switch (_via_canvas_regions[i].shape_attributes["name"]) {
@@ -2236,7 +2252,6 @@ function _via_reg_canvas_mousedown_handler(e) {
 //  - moving/resizing/select/unselect existing region
 function _via_reg_canvas_mouseup_handler(e) {
   e.stopPropagation();
-  optionCropDoms = []; // 属性展示栏消失时，清空切割的dom展示数组
   _via_click_x1 = e.offsetX;
   _via_click_y1 = e.offsetY;
 
@@ -2847,7 +2862,6 @@ function _via_reg_canvas_mouseup_handler(e) {
 
 function _via_reg_canvas_mouseover_handler(e) {
   // change the mouse cursor icon
-  console.log(111);
   _via_redraw_reg_canvas();
   _via_reg_canvas.focus();
 }
@@ -3186,7 +3200,8 @@ function _via_reg_canvas_mousemove_handler(e) {
           moved_all_points_x,
           moved_all_points_y,
           true,
-          attr["name"]
+          attr["name"], // TODO: mousemove-resizing
+          attr["type"]
         );
         if (rf != null && _via_is_region_info_visible) {
           rf.innerHTML += "," + " Vertices:" + attr["all_points_x"].length;
@@ -3265,7 +3280,8 @@ function _via_reg_canvas_mousemove_handler(e) {
           moved_all_points_x,
           moved_all_points_y,
           true,
-          attr["name"]
+          attr["name"], // TODO: mousemove moving
+          attr["type"]
         );
         if (rf != null && _via_is_region_info_visible) {
           rf.innerHTML += "," + " Vertices:" + attr["all_points_x"].length;
@@ -3292,7 +3308,13 @@ function _via_reg_canvas_mousemove_handler(e) {
     if (npts > 0) {
       var line_x = [all_points_x.slice(npts - 1), _via_current_x];
       var line_y = [all_points_y.slice(npts - 1), _via_current_y];
-      _via_draw_polygon_region(line_x, line_y, false, attr["name"]);
+      _via_draw_polygon_region(
+        line_x,
+        line_y,
+        false,
+        attr["name"],
+        attr["type"]
+      ); // mousemove drawing
     }
 
     if (rf != null && _via_is_region_info_visible) {
@@ -3536,12 +3558,13 @@ function draw_all_regions() {
         break;
 
       case VIA_REGION_SHAPE.POLYLINE: // handled by polygon
-      case VIA_REGION_SHAPE.POLYGON:
+      case VIA_REGION_SHAPE.POLYGON: // TODO:
         _via_draw_polygon_region(
           attr["all_points_x"],
           attr["all_points_y"],
           is_selected,
-          attr["name"]
+          attr["name"],
+          attr["type"]
         );
         break;
 
@@ -3729,15 +3752,24 @@ function _via_draw_ellipse(cx, cy, rx, ry, rr) {
   _via_reg_ctx.restore(); // restore to original state
   _via_reg_ctx.closePath();
 }
-
+// 绘制polygon
 function _via_draw_polygon_region(
   all_points_x,
   all_points_y,
   is_selected,
-  shape
+  shape,
+  type
 ) {
   if (is_selected) {
-    _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
+    if (type) {
+      // 线的颜色
+      _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_COLOR_OBJ[type];
+      _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR_OBJ[type];
+    } else {
+      _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
+      _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
+    }
+
     _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH / 2;
     _via_reg_ctx.beginPath();
     _via_reg_ctx.moveTo(all_points_x[0], all_points_y[0]);
@@ -3749,14 +3781,23 @@ function _via_draw_polygon_region(
     }
     _via_reg_ctx.stroke();
 
-    _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
-    _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
-    _via_reg_ctx.fill();
+    // 填充颜色
+    // _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
     _via_reg_ctx.globalAlpha = 1.0;
+    _via_reg_ctx.fill();
+    _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
     for (var i = 0; i < all_points_x.length; ++i) {
       _via_draw_control_point(all_points_x[i], all_points_y[i]);
     }
   } else {
+    if (type) {
+      // 线的颜色
+      _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_COLOR_OBJ[type];
+      _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR_OBJ[type];
+    } else {
+      _via_reg_ctx.strokeStyle = VIA_THEME_SEL_REGION_FILL_BOUNDARY_COLOR;
+      _via_reg_ctx.fillStyle = VIA_THEME_SEL_REGION_FILL_COLOR;
+    }
     // draw a fill line
     _via_reg_ctx.lineWidth = VIA_THEME_REGION_BOUNDARY_WIDTH / 2;
     _via_reg_ctx.beginPath();
@@ -3768,6 +3809,9 @@ function _via_draw_polygon_region(
       _via_reg_ctx.lineTo(all_points_x[0], all_points_y[0]); // close loop
     }
     _via_reg_ctx.stroke();
+    _via_reg_ctx.globalAlpha = VIA_THEME_SEL_REGION_OPACITY;
+    _via_reg_ctx.fill();
+    _via_reg_ctx.globalAlpha = 1.0;
   }
 }
 
@@ -3892,14 +3936,15 @@ function draw_all_region_id() {
     // first, draw a background rectangle first
     _via_reg_ctx.fillStyle = "white";
     _via_reg_ctx.globalAlpha = 0.8;
-    _via_reg_ctx.fillRect(
-      Math.floor(x),
-      Math.floor(y - 1.1 * char_height),
-      Math.floor(1 * bgnd_rect_width),
-      Math.floor(char_height)
-    );
+    // _via_reg_ctx.fillRect(
+    //   Math.floor(x),
+    //   Math.floor(y - 1.1 * char_height),
+    //   Math.floor(1 * bgnd_rect_width),
+    //   Math.floor(char_height)
+    // );
 
     // then, draw text over this background rectangle
+    // TODO:
     _via_reg_ctx.globalAlpha = 2.0;
     _via_reg_ctx.fillStyle = "black";
 
@@ -3922,11 +3967,11 @@ function draw_all_region_id() {
       tit = annotation_str;
     }
     // _via_reg_ctx.clearRect(x, y, x + 0.4*char_width,y - 0.35*char_height);
-    _via_reg_ctx.fillText(
-      tit,
-      Math.floor(x + 0.5 * char_width),
-      Math.floor(y - 0.5 * char_height)
-    );
+    // _via_reg_ctx.fillText(
+    //   tit,
+    //   Math.floor(x + 0.5 * char_width),
+    //   Math.floor(y - 0.5 * char_height)
+    // );
   }
 }
 
@@ -4864,7 +4909,25 @@ function _via_polyshape_finish_drawing() {
     set_region_annotations_to_default_value(new_region_id);
     annotation_editor_add_row(new_region_id);
     annotation_editor_scroll_to_row(new_region_id);
+    annotation_editor_show();
 
+
+    // set_region_annotations_to_default_value(new_region_id);
+    //     select_only_region(new_region_id);
+    //     if (
+    //       _via_annotation_editor_mode ===
+    //         VIA_ANNOTATION_EDITOR_MODE.ALL_REGIONS &&
+    //       _via_metadata_being_updated === "region"
+    //     ) {
+    //       annotation_editor_add_row(new_region_id);
+    //       annotation_editor_scroll_to_row(new_region_id);
+    //       annotation_editor_clear_row_highlight();
+    //       annotation_editor_highlight_row(new_region_id);
+    //     }
+        
+
+    _via_load_canvas_regions()
+    
     _via_redraw_reg_canvas();
     _via_reg_canvas.focus();
   }
@@ -7857,6 +7920,7 @@ function annotation_editor_get_metadata_row_html(row_id) {
             attr_value =
               _via_img_metadata[_via_image_id].regions[row_id]
                 .region_attributes[attr_id];
+            console.log(_via_img_metadata[_via_image_id].regions[row_id]);
           } else {
             attr_placeholder = "not defined yet!";
           }
@@ -8000,10 +8064,6 @@ function annotation_editor_get_metadata_row_html(row_id) {
           var option_html_id = attr_html_id + "__" + option_id;
           var option = document.createElement("input");
 
-          if (attr_id === "crop") {
-            optionCropDoms.push(option);
-          }
-
           option.setAttribute("type", "checkbox");
           option.setAttribute("value", option_id);
           option.setAttribute("id", option_html_id);
@@ -8041,28 +8101,6 @@ function annotation_editor_get_metadata_row_html(row_id) {
           container.appendChild(option);
           container.appendChild(label);
           col.appendChild(container);
-        }
-
-        // 切割属性要单独判断
-        if (attr_id === "crop") {
-          for (let i = 0; i < optionCropDoms.length; i++) {
-            let option = optionCropDoms[i];
-            if (option.value == "0") {
-              // 如果选中了'无切割'，则其他选项禁止选中
-              if (option.checked) {
-                for (let j = 0; j < optionCropDoms.length; j++) {
-                  if (!optionCropDoms[j].checked) {
-                    optionCropDoms[j].setAttribute("disabled", true);
-                  }
-                }
-              } else {
-                option.setAttribute("disabled", true);
-              }
-            } else {
-              // 如果选中了'无切割'之外的其他选项，则'无切割'选项禁止选中
-              // optionCropDoms[0].setAttribute('disabled', true)
-            }
-          }
         }
 
         break;
@@ -8351,38 +8389,6 @@ function annotation_editor_on_metadata_focus(p) {
 
 // invoked when the user updates annotations using the annotation editor
 function annotation_editor_on_metadata_update(p, attr_id) {
-  // 切割属性要单独判断
-  if (attr_id === "crop") {
-    if (p.value == "0") {
-      // 如果选中了'无切割'，则其他选项禁止选中
-      if (p.checked) {
-        for (let j = 0; j < optionCropDoms.length; j++) {
-          if (optionCropDoms[j].value != "0") {
-            optionCropDoms[j].setAttribute("disabled", true);
-          }
-        }
-      } else {
-        for (let j = 0; j < optionCropDoms.length; j++) {
-          if (optionCropDoms[j].value != "0") {
-            optionCropDoms[j].disabled = false;
-          }
-        }
-      }
-    } else {
-      // 如果选中了'无切割'之外的其他选项，则'无切割'选项禁止选中
-      let d = optionCropDoms.find((dom) => dom.value == "0");
-      if (p.checked) {
-        d && d.setAttribute("disabled", true);
-      } else {
-        // 查询是否还有其他选项被勾选，当所有的非'无切割'选项都未勾选时，'无切割'选项才允许勾选
-        let result = optionCropDoms.find((dom) => dom.checked);
-        if (!result) {
-          d.disabled = false;
-        }
-      }
-    }
-  }
-
   var pid = annotation_editor_extract_html_id_components(p.id);
   var img_id = _via_image_id;
 
@@ -8461,6 +8467,7 @@ function annotation_editor_on_metadata_update_done(
       break;
     }
   }
+  _via_load_canvas_regions()
   _via_regions_group_color_init();
   _via_redraw_reg_canvas();
 
@@ -8857,7 +8864,7 @@ function project_commit_confirmed(input) {
     via_data_format_version: "2.0.10",
     via_image_id_list: _via_image_id_list,
     task_name: decodeURI(getQueryVariable("taskName")),
-    stream_id: getQueryVariable("streamId"),
+    stream_id: "", //getQueryVariable("streamId"),
   };
   var ajaxObj = new XMLHttpRequest();
   ajaxObj.open("POST", _url + "/business/labelVia/commitViaInfo", true);
@@ -8976,7 +8983,7 @@ function project_save_confirmed(input, subUrl, saveType) {
     via_data_format_version: "2.0.10",
     via_image_id_list: _via_image_id_list,
     taskName: decodeURI(getQueryVariable("taskName")),
-    stream_id: getQueryVariable("streamId"),
+    stream_id: "", //getQueryVariable("streamId"),
   };
   var ajaxObj = new XMLHttpRequest();
   ajaxObj.open("POST", _url + subUrl, true);
@@ -9213,6 +9220,7 @@ function project_file_remove_with_confirm() {
 
 function project_file_remove_confirmed(input) {
   var img_index = input.img_index.value - 1;
+  discardImg(_via_image_id_list[img_index]);
   project_remove_file(img_index);
 
   if (img_index === _via_img_count) {
@@ -9227,7 +9235,7 @@ function project_file_remove_confirmed(input) {
   }
   _via_reload_img_fn_list_table = true;
   update_img_fn_list();
-  discardImg(_via_image_id_list[img_index]);
+  
   show_message("Removed file [" + input.filename.value + "] from project");
   user_input_default_cancel_handler();
 }
